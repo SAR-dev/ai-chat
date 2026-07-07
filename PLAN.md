@@ -14,7 +14,7 @@
 - [ ] Install Tailwind CSS and configure `tailwind.config.js` / `index.css`
 - [ ] Initialize shadcn/ui (`npx shadcn@latest init`) — this pulls in `class-variance-authority`, `clsx`, `tailwind-merge`, `tailwindcss-animate`, and `@radix-ui/*` primitives automatically as you add components
 - [ ] Add the shadcn components used across the app up front so later phases just import them:
-  `npx shadcn@latest add button input textarea label card dialog sheet tabs command dropdown-menu popover tooltip skeleton avatar separator scroll-area badge alert-dialog form select table resizable sonner progress slider toggle-group`
+      `npx shadcn@latest add button input textarea label card dialog sheet tabs command dropdown-menu popover tooltip skeleton avatar separator scroll-area badge alert-dialog form select table resizable sonner progress slider toggle-group`
 - [ ] Install core dependencies:
   - `zustand` (state)
   - `react-router-dom` (routing)
@@ -269,17 +269,17 @@ This is the foundation the Auth (Phase 4) and Chat Data (Phase 5) layers build o
 
 ## Appendix A — "Cobalt" theme reference
 
-| Role | Light mode | Dark mode |
-|---|---|---|
-| Primary | `#2F6FEB` | `#4F86F7` |
-| Primary-foreground | `#FFFFFF` | `#0B1220` |
-| Background | `#F7F9FC` | `#0B1220` |
-| Foreground (text) | `#0F172A` | `#E5EAF3` |
-| Card / surface | `#FFFFFF` | `#121A2B` |
-| Muted / secondary | `#EEF2F8` | `#1A2436` |
-| Border | `#E2E8F0` | `#1E293B` |
-| Accent (links, highlights) | `#DCE8FD` | `#1E2F4D` |
-| Destructive | `#E5484D` | `#F16468` |
+| Role                       | Light mode | Dark mode |
+| -------------------------- | ---------- | --------- |
+| Primary                    | `#2F6FEB`  | `#4F86F7` |
+| Primary-foreground         | `#FFFFFF`  | `#0B1220` |
+| Background                 | `#F7F9FC`  | `#0B1220` |
+| Foreground (text)          | `#0F172A`  | `#E5EAF3` |
+| Card / surface             | `#FFFFFF`  | `#121A2B` |
+| Muted / secondary          | `#EEF2F8`  | `#1A2436` |
+| Border                     | `#E2E8F0`  | `#1E293B` |
+| Accent (links, highlights) | `#DCE8FD`  | `#1E2F4D` |
+| Destructive                | `#E5484D`  | `#F16468` |
 
 `globals.css` HSL variables:
 
@@ -316,6 +316,7 @@ This is the foundation the Auth (Phase 4) and Chat Data (Phase 5) layers build o
 ## Appendix B — Full Package Manifest
 
 ### Scaffolding & styling
+
 ```
 npm create vite@latest . -- --template react-ts
 npm install -D tailwindcss postcss autoprefixer
@@ -324,32 +325,38 @@ npx shadcn@latest add button input textarea label card dialog sheet tabs command
 ```
 
 ### State, routing & HTTP
+
 ```
 npm install zustand react-router-dom axios
 ```
 
 ### Mock API layer
+
 ```
 npm install -D msw
 npx msw init public/ --save
 ```
 
 ### Forms & validation
+
 ```
 npm install react-hook-form zod @hookform/resolvers
 ```
 
 ### Localization
+
 ```
 npm install i18next react-i18next i18next-browser-languagedetector
 ```
 
 ### Theming
+
 ```
 npm install next-themes
 ```
 
 ### Markdown / rich content
+
 ```
 npm install react-markdown remark-gfm remark-math rehype-katex katex rehype-raw rehype-slug rehype-autolink-headings
 npm install rehype-highlight highlight.js      # or: npm install shiki
@@ -358,11 +365,13 @@ npm install remark-breaks remark-toc           # optional
 ```
 
 ### Artifacts
+
 ```
 npm install @codesandbox/sandpack-react        # optional — only if you want live/runnable code previews
 ```
 
 ### Files
+
 ```
 npm install react-dropzone
 npm install react-pdf                          # PDF preview
@@ -371,28 +380,33 @@ npm install xlsx                               # .xlsx/.csv preview
 ```
 
 ### Utilities & animation
+
 ```
 npm install uuid date-fns framer-motion
 npm install -D @types/uuid
 ```
 
 ### Performance (optional, Phase 15)
+
 ```
 npm install @tanstack/react-virtual
 ```
 
 ### Testing
+
 ```
 npm install -D vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
 npm install -D @playwright/test                # optional, e2e
 ```
 
 ### Tooling
+
 ```
 npm install -D eslint prettier husky lint-staged
 ```
 
 ### Explicitly dropped from the legacy MUI/Redux app (superseded by shadcn/Tailwind equivalents)
+
 - `@mui/material`, `@mui/icons-material`, `@emotion/react`, `@emotion/styled` → replaced by Tailwind + shadcn/Radix
 - `@radix-ui/themes` → shadcn already composes bare `@radix-ui/react-*` primitives directly
 - `@reduxjs/toolkit`, `redux`, `react-redux` → replaced by `zustand`
@@ -416,6 +430,7 @@ If the project later needs the mock API reachable from outside the browser (e.g.
 ---
 
 ## Future Extension Points (not in initial scope)
+
 - Swap the mock API for a real backend: point `VITE_API_BASE_URL` at it, set `VITE_USE_MOCKS=false`, delete/retire `mocks/` once parity is confirmed — `apiClient` and the stores shouldn't need to change
 - Swap mock streaming for real Anthropic API calls (streaming SSE), including sending uploaded files to the API and streaming artifact content incrementally — the `AbortController`-based streaming path from Phase 12 carries over directly
 - Real file storage/backend upload endpoint (replacing the mock `/files` handler)
