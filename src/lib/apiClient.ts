@@ -128,7 +128,7 @@ async function streamFromURL(
 
   // Token pacing: display tokens at a constant rate regardless of API delivery speed
   const DISPLAY_INTERVAL = 40
-  let tokenQueue: string[] = []
+  const tokenQueue: string[] = []
   let displayTimer: ReturnType<typeof setTimeout> | null = null
 
   function pushToken(token: string) {

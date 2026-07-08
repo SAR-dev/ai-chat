@@ -12,8 +12,15 @@ interface ImageZoomModalProps {
 
 export default function ImageZoomModal({ images, index, onOpenChange }: ImageZoomModalProps) {
   const [current, setCurrent] = useState(index)
+  const [prevIndex, setPrevIndex] = useState(index)
 
-  useEffect(() => setCurrent(index), [index])
+  // Reset the shown image whenever the `index` prop changes (e.g. a different
+  // image was clicked). Adjusting state during render avoids the extra
+  // render pass a useEffect would cause.
+  if (index !== prevIndex) {
+    setPrevIndex(index)
+    setCurrent(index)
+  }
 
   const hasMultiple = images.length > 1
   const image = images[current]

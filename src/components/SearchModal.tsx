@@ -19,12 +19,21 @@ export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
+  const [prevOpen, setPrevOpen] = useState(open)
   const sessions = useChatStore((s) => s.sessions)
   const messagesBySessionId = useChatStore((s) => s.messagesBySessionId)
 
-  useEffect(() => {
+  // Clear the previous search whenever the modal opens. Adjusting state
+  // during render avoids the extra render pass a useEffect would cause.
+  if (open !== prevOpen) {
+    setPrevOpen(open)
     if (open) {
       setQuery('')
+    }
+  }
+
+  useEffect(() => {
+    if (open) {
       setTimeout(() => inputRef.current?.focus(), 50)
     }
   }, [open])

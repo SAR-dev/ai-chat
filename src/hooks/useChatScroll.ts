@@ -95,9 +95,8 @@ export function useChatScroll({ viewportRef, contentRef, deps = [], resetKey }: 
   useEffect(() => {
     if (resetKey == undefined) return
     userScrolledUp.current = false
-    setShowJumpButton(false)
-    setIsAtBottom(true)
     // Snap (no smooth animation) once the new conversation's messages are in the DOM.
+    // scrollToBottom(false) also resets showJumpButton/isAtBottom, so no need to set them here.
     scrollToBottom(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey])
