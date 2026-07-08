@@ -6,13 +6,12 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
+
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -21,14 +20,8 @@ import { useSettingsStore } from '@/stores/settingsStore'
 import i18n from '@/lib/i18n'
 import { ArrowCounterClockwise, SignOut } from '@phosphor-icons/react'
 
-const defaults = {
-  language: 'en',
-  temperature: 0.7,
-}
-
 const settingsSchema = z.object({
   language: z.string(),
-  temperature: z.number().min(0).max(2),
 })
 
 interface SettingsModalProps {
@@ -46,12 +39,10 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     resolver: zodResolver(settingsSchema),
     defaultValues: {
       language: settings.language,
-      temperature: settings.temperature,
     },
   })
 
   const currentLang = watch('language')
-  const currentTemp = watch('temperature')
 
   const handleLanguageChange = (value: string | null) => {
     if (!value) return
@@ -61,17 +52,10 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     toast.success(t('settings.saved'))
   }
 
-  const handleTemperatureChange = (value: number | readonly number[]) => {
-    const temp = Array.isArray(value) ? value[0] : value
-    setValue('temperature', temp)
-    settings.setTemperature(temp)
-  }
-
   const handleReset = () => {
     settings.resetDefaults()
-    setValue('language', defaults.language)
-    setValue('temperature', defaults.temperature)
-    i18n.changeLanguage(defaults.language)
+    setValue('language', 'en')
+    i18n.changeLanguage('en')
     toast.success(t('settings.saved'))
   }
 
@@ -104,26 +88,13 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
             <Label>{t('settings.language')}</Label>
             <Select value={currentLang} onValueChange={handleLanguageChange}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <span>{currentLang === 'en' ? t('settings.languageEn') : t('settings.languageJa')}</span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="en">{t('settings.languageEn')}</SelectItem>
                 <SelectItem value="ja">{t('settings.languageJa')}</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>
-              {t('settings.temperature')}: {currentTemp.toFixed(1)}
-            </Label>
-            <Slider
-              value={currentTemp}
-              onValueChange={handleTemperatureChange}
-              min={0}
-              max={2}
-              step={0.1}
-            />
           </div>
 
           <Button variant="outline" className="w-full gap-2" onClick={handleReset}>

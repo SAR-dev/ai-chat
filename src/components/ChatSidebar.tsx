@@ -8,17 +8,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import SidebarItem from '@/components/SidebarItem'
 import SettingsModal from '@/components/SettingsModal'
+import SearchModal from '@/components/SearchModal'
 import BrandMark from '@/components/BrandMark'
 import { useChatStore } from '@/stores/chatStore'
 import { Plus, MagnifyingGlass, SidebarSimple } from '@phosphor-icons/react'
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
 import { useAuthStore } from '@/stores/authStore'
 import { Gear } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
@@ -32,7 +25,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { sessionId: activeId } = useParams()
-  const [commandOpen, setCommandOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const { sessions, sessionsStatus, loadSessions, createSession, deleteSession } =
@@ -47,7 +40,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        setCommandOpen((open) => !open)
+        setSearchOpen(true)
       }
     }
     document.addEventListener('keydown', handleKeyDown)
@@ -142,7 +135,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
                   className="text-muted-foreground h-9 w-9 rounded-xl"
                 />
               }
-              onClick={() => setCommandOpen(true)}
+              onClick={() => setSearchOpen(true)}
             >
               <MagnifyingGlass className="h-4 w-4" />
             </TooltipTrigger>
@@ -153,7 +146,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
             variant="ghost"
             size="sm"
             className="text-muted-foreground h-9 w-full justify-start gap-2 rounded-xl"
-            onClick={() => setCommandOpen(true)}
+            onClick={() => setSearchOpen(true)}
           >
             <MagnifyingGlass className="h-4 w-4" />
             {t('sidebar.search')}
@@ -245,25 +238,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
 
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
 
-      <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
-        <CommandInput placeholder={t('sidebar.search')} />
-        <CommandList>
-          <CommandEmpty>No results found</CommandEmpty>
-          <CommandGroup heading="Conversations">
-            {sessions.map((session) => (
-              <CommandItem
-                key={session.id}
-                onSelect={() => {
-                  navigate(`/chat/${session.id}`)
-                  setCommandOpen(false)
-                }}
-              >
-                {session.title}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </CommandList>
-      </CommandDialog>
+      <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   )
 }

@@ -95,7 +95,6 @@
     "language": "言語",
     "languageEn": "English",
     "languageJa": "日本語",
-    "temperature": "温度",
     "resetDefaults": "デフォルトにリセット",
     "resetConfirm": "設定をデフォルトにリセットしてもよろしいですか？",
     "saved": "設定を保存しました"
@@ -116,6 +115,7 @@
     "error": "エラーが発生しました",
     "close": "閉じる",
     "back": "戻る",
-    "save": "保存"
+    "save": "保存",
+    "noResults": "結果が見つかりません"
   }
 }

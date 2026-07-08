@@ -95,7 +95,6 @@
     "language": "Language",
     "languageEn": "English",
     "languageJa": "日本語",
-    "temperature": "Temperature",
     "resetDefaults": "Reset to defaults",
     "resetConfirm": "Are you sure you want to reset settings to defaults?",
     "saved": "Settings saved"
@@ -116,6 +115,7 @@
     "error": "An error occurred",
     "close": "Close",
     "back": "Back",
-    "save": "Save"
+    "save": "Save",
+    "noResults": "No results found"
   }
 }
