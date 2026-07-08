@@ -9,6 +9,7 @@ import ImageGenLoading from '@/components/ImageGenLoading'
 import ImageZoomModal from '@/components/ImageZoomModal'
 import SlideDeckView from '@/components/SlideDeckView'
 import SlidePipelineStepper from '@/components/SlidePipelineStepper'
+import SlideGenLoading from '@/components/SlideGenLoading'
 import type { MessageState } from '@/types'
 import { cn } from '@/lib/utils'
 import {
@@ -20,7 +21,6 @@ import {
   Download,
 } from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
-import { translateStatus } from '@/utils/statusMessages'
 import * as api from '@/lib/apiClient'
 import { toast } from 'sonner'
 
@@ -248,10 +248,7 @@ export default function ChatMessage({
             )}
 
             {message.slideStatus && (
-              <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="bg-primary h-3 w-3 animate-pulse rounded-full" />
-                {translateStatus(message.slideStatus, t)}
-              </div>
+              <SlideGenLoading status={message.slideStatus} />
             )}
 
             {Object.keys(message.slideStages).length > 0 && (

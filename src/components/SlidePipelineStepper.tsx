@@ -1,33 +1,42 @@
+import { useTranslation } from 'react-i18next'
 import type { SlideStageEvent, SlideStageId } from '@/types'
 
-const STAGE_CATALOG: { id: SlideStageId; label: string }[] = [
-  { id: 'research', label: '情報収集' },
-  { id: 'style', label: 'スタイル選定' },
-  { id: 'planning', label: '構成作成' },
-  { id: 'quality', label: '品質チェック' },
-  { id: 'visual_identity', label: 'ビジュアル選定' },
-  { id: 'images', label: '画像検索' },
-  { id: 'rendering', label: 'レンダリング' },
-  { id: 'validation', label: '検証' },
-  { id: 'packaging', label: 'PPTX作成' },
+const STAGE_IDS: SlideStageId[] = [
+  'research',
+  'style',
+  'planning',
+  'quality',
+  'visual_identity',
+  'images',
+  'rendering',
+  'validation',
+  'packaging',
 ]
 
-const STAGE_LABELS: Record<SlideStageId, string> = Object.fromEntries(
-  STAGE_CATALOG.map((s) => [s.id, s.label]),
-) as Record<SlideStageId, string>
+const STAGE_TRANSLATION_KEYS: Record<SlideStageId, string> = {
+  research: 'chat.slideStageResearch',
+  style: 'chat.slideStageStyle',
+  planning: 'chat.slideStagePlanning',
+  quality: 'chat.slideStageQuality',
+  visual_identity: 'chat.slideStageVisualIdentity',
+  images: 'chat.slideStageImages',
+  rendering: 'chat.slideStageRendering',
+  validation: 'chat.slideStageValidation',
+  packaging: 'chat.slideStagePackaging',
+}
 
 interface SlidePipelineStepperProps {
   stages: Record<string, SlideStageEvent>
 }
 
 export default function SlidePipelineStepper({ stages }: SlidePipelineStepperProps) {
-  const stageIds = STAGE_CATALOG.map((s) => s.id)
+  const { t } = useTranslation()
 
   return (
     <div className="my-3 space-y-1.5">
-      <p className="text-xs font-medium text-muted-foreground">Slide Generation Progress</p>
+      <p className="text-xs font-medium text-muted-foreground">{t('chat.slideStatusGenerating')}</p>
       <div className="flex flex-wrap gap-1.5">
-        {stageIds.map((id) => {
+        {STAGE_IDS.map((id) => {
           const stage = stages[id]
           const status = stage?.stage_status ?? 'pending'
 
@@ -44,7 +53,7 @@ export default function SlidePipelineStepper({ stages }: SlidePipelineStepperPro
               key={id}
               className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium ${colorMap[status] ?? colorMap.pending}`}
             >
-              {STAGE_LABELS[id]}
+              {t(STAGE_TRANSLATION_KEYS[id])}
             </div>
           )
         })}
