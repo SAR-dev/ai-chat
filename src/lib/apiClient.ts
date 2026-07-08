@@ -148,14 +148,28 @@ async function streamFromURL(
     }
   }
 
-  function flushTokens() {
-    if (displayTimer) {
-      clearTimeout(displayTimer)
-      displayTimer = null
-    }
-    while (tokenQueue.length > 0) {
-      callbacks.onToken?.(tokenQueue.shift()!)
-    }
+  // Drains any remaining queued tokens at the same paced interval used for
+  // normal delivery. Previously `flushTokens` emptied the queue in a single
+  // synchronous `while` loop the moment `done` arrived, which meant any
+  // backlog built up during a fast/bursty response got dumped onto the UI
+  // all at once instead of trickling in — this keeps the same cadence
+  // through to the very last token.
+  function drainQueue(): Promise<void> {
+    return new Promise((resolve) => {
+      if (displayTimer) {
+        clearTimeout(displayTimer)
+        displayTimer = null
+      }
+      const step = () => {
+        if (tokenQueue.length == 0) {
+          resolve()
+          return
+        }
+        callbacks.onToken?.(tokenQueue.shift()!)
+        displayTimer = setTimeout(step, DISPLAY_INTERVAL)
+      }
+      step()
+    })
   }
 
   let raw = ''
@@ -237,7 +251,7 @@ async function streamFromURL(
         }
 
         if (data.type == 'done') {
-          flushTokens()
+          await drainQueue()
           callbacks.onDone?.(data.assistant_message_id)
           continue
         }
@@ -259,7 +273,7 @@ async function streamFromURL(
     }
   }
 
-  flushTokens()
+  await drainQueue()
 
   return sessionId
 }

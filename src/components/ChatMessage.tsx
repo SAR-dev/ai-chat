@@ -33,11 +33,11 @@ interface ChatMessageProps {
 }
 
 export default function ChatMessage({
-  message,
-  sessionId,
-  isStreaming,
-  streamingContent,
-}: ChatMessageProps) {
+                                      message,
+                                      sessionId,
+                                      isStreaming,
+                                      streamingContent,
+                                    }: ChatMessageProps) {
   const { t } = useTranslation()
   const isUser = message.type == 'right'
   const displayContent = isStreaming ? (streamingContent ?? '') : message.content
@@ -52,17 +52,18 @@ export default function ChatMessage({
 
   useEffect(() => {
     const full = targetRef.current
-
-    if (!isStreaming) {
-      posRef.current = full.length
-      setRevealed(full)
+    const from = posRef.current
+    const to = full.length
+    if (from >= to) {
+      posRef.current = to
       return
     }
 
-    const from = posRef.current
-    const to = full.length
-    if (from >= to) return
-
+    // Fixed-rate reveal, always animated — including after streaming ends.
+    // Previously, finishing the stream snapped straight to the full text,
+    // which looked like a sudden dump if the reveal had fallen behind the
+    // real (bursty) arrival rate. Now it just keeps tweening at the same
+    // pace until it catches up, whether or not isStreaming is still true.
     const controls = animate(from, to, {
       type: 'tween',
       ease: 'linear',
