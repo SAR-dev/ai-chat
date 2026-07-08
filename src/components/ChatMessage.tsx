@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -189,6 +190,15 @@ export default function ChatMessage({
         ) : (
           <div className="min-w-0 break-words">
             <MarkdownRenderer content={displayContent} sources={message.sources} />
+            {isStreaming && (
+              <motion.span
+                animate={{ opacity: [1, 0, 1] }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+                className="text-foreground ml-0.5 inline-block font-mono text-sm leading-relaxed"
+              >
+                ▍
+              </motion.span>
+            )}
 
             {message.sources.length > 0 && (
               <div className="mt-3 space-y-1">
