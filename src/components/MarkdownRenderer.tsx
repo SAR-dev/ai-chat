@@ -134,7 +134,7 @@ const components: Components = {
 
 export default function MarkdownRenderer({ content }: { content: string }) {
   return (
-    <div className="prose prose-sm dark:prose-invert min-w-0 max-w-none break-words">
+    <div className="prose prose-sm min-w-0 max-w-none break-words">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[

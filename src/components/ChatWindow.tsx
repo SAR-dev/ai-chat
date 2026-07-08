@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import ChatMessage from '@/components/ChatMessage'
 import TypingIndicator from '@/components/TypingIndicator'
+import Mascot from '@/components/Mascot'
 import { useChatStore } from '@/stores/chatStore'
 
 interface ChatWindowProps {
@@ -46,14 +47,15 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-3">
+        <Mascot expression="thinking" className="h-16 w-16" />
         <p className="text-muted-foreground text-sm">{t('chat.emptyConversation')}</p>
       </div>
     )
   }
 
   return (
-    <ScrollArea className="min-w-0 flex-1" ref={scrollRef}>
+    <ScrollArea className="min-h-0 min-w-0 flex-1" ref={scrollRef}>
       <div className="mx-auto max-w-3xl py-4">
         {messages.map((msg) => (
           <ChatMessage key={msg.id} message={msg} />

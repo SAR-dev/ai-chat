@@ -14,7 +14,7 @@ const seedData: MockDB = {
   sessions: [
     {
       id: 'session-1',
-      title: 'Welcome to AI Chat',
+      title: 'Welcome to KikuChat',
       createdAt: now,
       updatedAt: now,
     },
@@ -24,7 +24,7 @@ const seedData: MockDB = {
       id: 'msg-1',
       sessionId: 'session-1',
       role: 'assistant',
-      content: `Hello! Welcome to **AI Chat**. I'm your AI assistant. Here are some things I can help you with:
+      content: `Hello! Welcome to **KikuChat**, powered by **Kikuma v-1.0.0**. I'm your AI assistant. Here are some things I can help you with:
 
 - Answer questions and explain concepts
 - Write and debug **code** in various languages

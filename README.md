@@ -1,6 +1,6 @@
-# AI Chat
+# KikuChat
 
-A feature-rich AI chat application built with React, TypeScript, and shadcn/ui.
+A feature-rich AI chat application built with React, TypeScript, and shadcn/ui, powered by Kikuma v-1.0.0.
 
 ## Stack
 
@@ -21,7 +21,7 @@ A feature-rich AI chat application built with React, TypeScript, and shadcn/ui.
 - File upload and preview
 - Session management (create, rename, delete conversations)
 - Message actions: copy, edit, regenerate, feedback, download
-- Dark/light theme with Cobalt blue palette
+- Cobalt blue color palette
 - English/Japanese localization
 - Responsive layout (desktop resizable sidebar, mobile drawer)
 - Cmd+K command palette for session search

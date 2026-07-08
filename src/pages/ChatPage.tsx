@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ChatWindow from '@/components/ChatWindow'
 import ChatInput from '@/components/ChatInput'
-import BrandMark from '@/components/BrandMark'
 import { useChatStore } from '@/stores/chatStore'
 import {
   FileText,
@@ -53,7 +52,12 @@ export default function ChatPage() {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-8 px-4 text-center">
         <div className="flex flex-col items-center gap-3">
-          <BrandMark className="h-10 w-10" />
+          <img
+            src="/mascot/victory-pose.png"
+            alt=""
+            className="h-24 w-24 object-contain"
+            aria-hidden
+          />
           <h1 className="text-2xl font-medium tracking-tight">{t('chat.homeGreeting')}</h1>
           <p className="text-muted-foreground max-w-sm text-sm">{t('chat.homeSubtitle')}</p>
         </div>

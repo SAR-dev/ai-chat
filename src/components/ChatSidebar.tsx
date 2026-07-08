@@ -131,7 +131,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
           <Button
             variant="outline"
             size="sm"
-            className="h-9 w-full justify-start gap-2 rounded-xl border-none bg-transparent shadow-none hover:bg-white/60 dark:hover:bg-white/5"
+            className="h-9 w-full justify-start gap-2 rounded-xl border-none bg-transparent shadow-none hover:bg-white/60"
             onClick={handleNewChat}
           >
             <Plus weight="bold" className="h-4 w-4" />

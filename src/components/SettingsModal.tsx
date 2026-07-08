@@ -18,18 +18,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/authStore'
 import { useSettingsStore } from '@/stores/settingsStore'
-import { useTheme } from '@/components/theme-provider'
 import i18n from '@/lib/i18n'
 import { ArrowCounterClockwise, SignOut } from '@phosphor-icons/react'
 
 const defaults = {
-  theme: 'system' as const,
   language: 'en',
   temperature: 0.7,
 }
 
 const settingsSchema = z.object({
-  theme: z.enum(['light', 'dark', 'system']),
   language: z.string(),
   temperature: z.number().min(0).max(2),
 })
@@ -42,30 +39,19 @@ interface SettingsModalProps {
 export default function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { setTheme } = useTheme()
   const { user, logout } = useAuthStore()
   const settings = useSettingsStore()
 
   const { setValue, watch } = useForm({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      theme: settings.theme,
       language: settings.language,
       temperature: settings.temperature,
     },
   })
 
-  const currentTheme = watch('theme')
   const currentLang = watch('language')
   const currentTemp = watch('temperature')
-
-  const handleThemeChange = (value: string | null) => {
-    if (!value) return
-    const theme = value as 'light' | 'dark' | 'system'
-    setValue('theme', theme)
-    settings.setTheme(theme)
-    setTheme(theme)
-  }
 
   const handleLanguageChange = (value: string | null) => {
     if (!value) return
@@ -83,10 +69,8 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   const handleReset = () => {
     settings.resetDefaults()
-    setValue('theme', defaults.theme)
     setValue('language', defaults.language)
     setValue('temperature', defaults.temperature)
-    setTheme(defaults.theme)
     i18n.changeLanguage(defaults.language)
     toast.success(t('settings.saved'))
   }
@@ -110,17 +94,10 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
         )}
         <div className="space-y-6">
           <div className="space-y-2">
-            <Label>{t('settings.theme')}</Label>
-            <Select value={currentTheme} onValueChange={handleThemeChange}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">{t('settings.themeLight')}</SelectItem>
-                <SelectItem value="dark">{t('settings.themeDark')}</SelectItem>
-                <SelectItem value="system">{t('settings.themeSystem')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>{t('settings.model')}</Label>
+            <div className="border-border bg-muted/50 text-foreground/90 flex h-9 items-center rounded-md border px-3 text-sm">
+              {t('app.model')}
+            </div>
           </div>
 
           <div className="space-y-2">

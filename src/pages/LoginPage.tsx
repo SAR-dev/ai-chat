@@ -59,38 +59,51 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-foreground/80 text-sm font-normal">
-                {t('login.email')}
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder={t('login.emailPlaceholder')}
-                className="h-11 rounded-xl px-4"
-                {...register('email')}
-              />
-              {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-foreground/80 text-sm font-normal">
-                {t('login.password')}
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                className="h-11 rounded-xl px-4"
-                {...register('password')}
-              />
-              {errors.password && (
-                <p className="text-destructive text-xs">{errors.password.message}</p>
-              )}
-            </div>
-            <Button type="submit" className="h-11 w-full rounded-full text-sm" disabled={isLoading}>
-              {isLoading ? t('login.loggingIn') : t('login.signIn')}
-            </Button>
-          </form>
+          <div className="border-border bg-card rounded-2xl border p-6 shadow-sm sm:p-7">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-foreground/80 text-sm font-normal">
+                  {t('login.email')}
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={t('login.emailPlaceholder')}
+                  className="h-11 rounded-xl px-4"
+                  {...register('email')}
+                />
+                {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-foreground/80 text-sm font-normal">
+                    {t('login.password')}
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={() => toast.info(t('login.forgotPasswordToast'))}
+                    className="text-primary text-xs hover:underline"
+                  >
+                    {t('login.forgotPassword')}
+                  </button>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  className="h-11 rounded-xl px-4"
+                  {...register('password')}
+                />
+                {errors.password && (
+                  <p className="text-destructive text-xs">{errors.password.message}</p>
+                )}
+              </div>
+              <Button type="submit" className="h-11 w-full rounded-full text-sm" disabled={isLoading}>
+                {isLoading ? t('login.loggingIn') : t('login.signIn')}
+              </Button>
+            </form>
+          </div>
+
+          <p className="text-muted-foreground/70 mt-4 text-center text-xs">{t('login.demoHint')}</p>
         </div>
 
         <p className="text-muted-foreground/70 mt-10 text-xs lg:hidden">{t('app.name')}</p>

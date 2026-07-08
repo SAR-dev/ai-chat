@@ -1,5 +1,6 @@
 import { Component } from 'react'
 import type { ReactNode, ErrorInfo } from 'react'
+import Mascot from '@/components/Mascot'
 
 interface Props {
   children: ReactNode
@@ -29,6 +30,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex h-svh items-center justify-center p-8">
           <div className="max-w-lg space-y-4">
+            <Mascot expression="thinking" className="h-16 w-16" />
             <h1 className="text-destructive text-lg font-bold">Something went wrong</h1>
             <pre className="text-muted-foreground overflow-auto rounded border p-4 text-xs">
               {this.state.error?.message}

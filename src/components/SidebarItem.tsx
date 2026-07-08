@@ -89,6 +89,12 @@ export default function SidebarItem({
               <Trash className="h-3 w-3" />
             </AlertDialogTrigger>
             <AlertDialogContent>
+              <img
+                src="/mascot/alert.png"
+                alt=""
+                className="mx-auto h-20 w-20 object-contain"
+                aria-hidden
+              />
               <AlertDialogHeader>
                 <AlertDialogTitle>{t('sidebar.deleteConfirm')}</AlertDialogTitle>
                 <AlertDialogDescription>{t('sidebar.deleteDescription')}</AlertDialogDescription>

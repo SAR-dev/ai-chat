@@ -215,7 +215,7 @@ export default function ChatInput({ sessionId, variant = 'default', className }:
             className="max-h-[200px] min-h-[56px] resize-none border-0 bg-transparent px-4 pt-3.5 pb-1 text-sm shadow-none ring-0 outline-none focus-visible:ring-0"
           />
 
-          <div className="flex items-center justify-between px-2 pb-2">
+          <div className="flex items-center justify-between p-2">
             <div className="flex min-w-0 items-center gap-1">
               <Button
                 variant="ghost"
@@ -309,6 +309,10 @@ export default function ChatInput({ sessionId, variant = 'default', className }:
             )}
           </div>
         </div>
+
+        <p className="text-muted-foreground/70 mt-2 text-center text-xs">
+          {t('chat.disclaimer')}
+        </p>
       </div>
     </div>
   )

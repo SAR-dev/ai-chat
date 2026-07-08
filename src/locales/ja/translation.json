@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "AIチャット"
+    "name": "KikuChat",
+    "model": "Kikuma v-1.0.0"
   },
   "login": {
     "title": "サインイン",
@@ -11,7 +12,19 @@
     "signIn": "サインイン",
     "loggingIn": "サインイン中...",
     "error": "メールアドレスまたはパスワードが無効です",
-    "logout": "ログアウト"
+    "logout": "ログアウト",
+    "heroGreeting": "こんにちは!",
+    "heroTagline": "じっくり考えごとができる、落ち着いた場所を一緒に。",
+    "featureAlwaysTitle": "いつでもチャット",
+    "featureAlwaysDesc": "昼も夜も、いつでもお手伝いします。",
+    "featureFriendlyTitle": "親しみやすく丁寧に",
+    "featureFriendlyDesc": "専門用語を使わず、わかりやすくお答えします。",
+    "featurePrivateTitle": "プライベートで安全",
+    "featurePrivateDesc": "あなたの会話はあなただけのものです。",
+    "trustNote": "Chattieは、すべての会話を気軽で安全なものにするために作られています。",
+    "demoHint": "デモ用ログイン: demo@example.com、パスワードは何でも可",
+    "forgotPassword": "パスワードをお忘れですか?",
+    "forgotPasswordToast": "このデモでは不要です。そのままサインインしてください。"
   },
   "sidebar": {
     "newChat": "新しいチャット",
@@ -53,14 +66,12 @@
     "submitFeedback": "送信",
     "thinking": "考え中...",
     "error": "メッセージの送信に失敗しました。もう一度お試しください。",
-    "retry": "再試行"
+    "retry": "再試行",
+    "disclaimer": "KikuChatは間違えることがあります。Kikuma v-1.0.0 で動作しています。"
   },
   "settings": {
     "title": "設定",
-    "theme": "テーマ",
-    "themeLight": "ライト",
-    "themeDark": "ダーク",
-    "themeSystem": "システム",
+    "model": "モデル",
     "language": "言語",
     "languageEn": "English",
     "languageJa": "日本語",

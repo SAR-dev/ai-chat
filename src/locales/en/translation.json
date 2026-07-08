@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "AI Chat"
+    "name": "KikuChat",
+    "model": "Kikuma v-1.0.0"
   },
   "login": {
     "title": "Sign in",
@@ -11,7 +12,19 @@
     "signIn": "Sign in",
     "loggingIn": "Signing in...",
     "error": "Invalid email or password",
-    "logout": "Log out"
+    "logout": "Log out",
+    "heroGreeting": "Hi there!",
+    "heroTagline": "A calmer place to think things through, together.",
+    "featureAlwaysTitle": "Always here to chat",
+    "featureAlwaysDesc": "Listening and ready to help, day or night.",
+    "featureFriendlyTitle": "Friendly & thoughtful",
+    "featureFriendlyDesc": "Clear, considerate answers, no jargon.",
+    "featurePrivateTitle": "Private & secure",
+    "featurePrivateDesc": "Your conversations stay yours.",
+    "trustNote": "Chattie is designed to make every conversation easy, friendly, and secure.",
+    "demoHint": "Demo login: demo@example.com, any password",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordToast": "Not needed for this demo, just sign in."
   },
   "sidebar": {
     "newChat": "New Chat",
@@ -53,14 +66,12 @@
     "submitFeedback": "Submit",
     "thinking": "Thinking...",
     "error": "Failed to send message. Please try again.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "disclaimer": "KikuChat can make mistakes. Powered by Kikuma v-1.0.0."
   },
   "settings": {
     "title": "Settings",
-    "theme": "Theme",
-    "themeLight": "Light",
-    "themeDark": "Dark",
-    "themeSystem": "System",
+    "model": "Model",
     "language": "Language",
     "languageEn": "English",
     "languageJa": "日本語",

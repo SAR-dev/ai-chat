@@ -25,7 +25,7 @@ Here's a simple example:
 
 \`\`\`typescript
 function greet(name: string): string {
-  return \`Hello, \${name}! Welcome to AI Chat.\`;
+  return \`Hello, \${name}! Welcome to KikuChat.\`;
 }
 
 console.log(greet("User"));

@@ -5,8 +5,6 @@
 @import '@fontsource-variable/inter';
 @import 'katex/dist/katex.min.css';
 
-@custom-variant dark (&:is(.dark *));
-
 /*
   Design identity: warm, quiet, editorial -- the calm workspace look of a
   well-known AI assistant, re-keyed around a navy signal color instead of
@@ -47,36 +45,6 @@
   --sidebar-accent-foreground: #1f3a5f;
   --sidebar-border: #e6e3da;
   --sidebar-ring: #1f3a5f;
-}
-
-.dark {
-  --background: #262624;
-  --foreground: #f2f0e9;
-  --card: #2d2d2a;
-  --card-foreground: #f2f0e9;
-  --popover: #2d2d2a;
-  --popover-foreground: #f2f0e9;
-  --primary: #6f97c4;
-  --primary-foreground: #16232f;
-  --secondary: #34332f;
-  --secondary-foreground: #f2f0e9;
-  --muted: #34332f;
-  --muted-foreground: #9c9a90;
-  --accent: #2a3644;
-  --accent-foreground: #9cbde3;
-  --destructive: #d97a5f;
-  --destructive-foreground: #201b16;
-  --border: #3d3c37;
-  --input: #3d3c37;
-  --ring: #6f97c4;
-  --sidebar: #1f1e1c;
-  --sidebar-foreground: #f2f0e9;
-  --sidebar-primary: #6f97c4;
-  --sidebar-primary-foreground: #16232f;
-  --sidebar-accent: #2a3644;
-  --sidebar-accent-foreground: #9cbde3;
-  --sidebar-border: #3d3c37;
-  --sidebar-ring: #6f97c4;
 }
 
 @theme inline {
