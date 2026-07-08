@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -11,9 +11,8 @@ import SettingsModal from '@/components/SettingsModal'
 import SearchModal from '@/components/SearchModal'
 import BrandMark from '@/components/BrandMark'
 import { useChatStore } from '@/stores/chatStore'
-import { Plus, Search, PanelLeftClose } from 'lucide-react'
+import { PanelLeftClose, Plus, Search, Settings } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
-import { Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ChatSidebarProps {
@@ -24,7 +23,7 @@ interface ChatSidebarProps {
 export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: ChatSidebarProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const activeId = useChatStore((s) => s.activeSessionId)
+  const { sessionId } = useParams()
   const setActiveSession = useChatStore((s) => s.setActiveSession)
   const [searchOpen, setSearchOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -59,26 +58,21 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
   const handleDelete = useCallback(
     async (id: string) => {
       await deleteSession(id)
-      if (activeId === id) {
+      if (sessionId === id) {
         navigate('/chat')
       }
     },
-    [deleteSession, activeId, navigate],
+    [deleteSession, sessionId, navigate],
   )
 
   return (
     <div className="bg-sidebar flex h-full flex-col">
       <div
-        className={cn(
-          'flex items-center gap-2.5 px-4 py-4',
-          collapsed && 'flex-col gap-3 px-0',
-        )}
+        className={cn('flex items-center gap-2.5 px-4 py-4', collapsed && 'flex-col gap-3 px-0')}
       >
         <BrandMark className="h-6 w-6" />
         {!collapsed && (
-          <h2 className="text-sidebar-foreground truncate text-sm font-medium">
-            {t('app.name')}
-          </h2>
+          <h2 className="text-sidebar-foreground truncate text-sm font-medium">{t('app.name')}</h2>
         )}
         {onToggleCollapsed && (
           <Tooltip>
@@ -105,11 +99,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
           <Tooltip>
             <TooltipTrigger
               render={
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9 rounded-xl border-none"
-                />
+                <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl border-none" />
               }
               onClick={handleNewChat}
             >
@@ -141,7 +131,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
               }
               onClick={() => setSearchOpen(true)}
             >
-<Search className="h-4 w-4" />
+              <Search className="h-4 w-4" />
             </TooltipTrigger>
             <TooltipContent side="right">{t('sidebar.search')}</TooltipContent>
           </Tooltip>
@@ -190,7 +180,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
                             <SidebarItem
                               key={session.id}
                               session={session}
-                              isActive={session.id === activeId}
+                              isActive={session.id == sessionId}
                               onSelect={() => {
                                 setActiveSession(session.id)
                                 navigate(`/chat/${session.id}`)
@@ -211,7 +201,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
                         <SidebarItem
                           key={session.id}
                           session={session}
-                          isActive={session.id === activeId}
+                          isActive={session.id == sessionId}
                           onSelect={() => {
                             setActiveSession(session.id)
                             navigate(`/chat/${session.id}`)
@@ -260,7 +250,9 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-1 flex-col">
-                <span className="text-sidebar-foreground text-sm font-medium">{user.display_name ?? user.username}</span>
+                <span className="text-sidebar-foreground text-sm font-medium">
+                  {user.display_name ?? user.username}
+                </span>
                 <span className="text-sidebar-foreground/50 text-xs">@{user.username}</span>
               </div>
               <Button
