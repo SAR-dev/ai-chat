@@ -43,7 +43,7 @@ export default function LoginPage() {
     i18n.changeLanguage(value)
   }
 
-  const isAd = mode === 'ad'
+  const isAd = mode == 'ad'
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -167,7 +167,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleLanguageChange('en')}
                 className={`cursor-pointer rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                  language === 'en' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                  language == 'en' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 EN
@@ -176,7 +176,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleLanguageChange('ja')}
                 className={`cursor-pointer rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                  language === 'ja' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                  language == 'ja' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 JA

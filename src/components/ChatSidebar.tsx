@@ -42,7 +42,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key == 'k') {
         e.preventDefault()
         setSearchOpen(true)
       }
@@ -58,7 +58,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
   const handleDelete = useCallback(
     async (id: string) => {
       await deleteSession(id)
-      if (sessionId === id) {
+      if (sessionId == id) {
         navigate('/chat')
       }
     },
@@ -153,13 +153,13 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
 
       {!collapsed && (
         <ScrollArea className="flex-1 px-3">
-          {sessionsStatus === 'loading' ? (
+          {sessionsStatus == 'loading' ? (
             <div className="space-y-2 px-2">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-8 w-full" />
               ))}
             </div>
-          ) : sessions.length === 0 ? (
+          ) : sessions.length == 0 ? (
             <p className="text-sidebar-foreground/60 px-2 py-4 text-center text-sm">
               {t('sidebar.noConversations')}
             </p>

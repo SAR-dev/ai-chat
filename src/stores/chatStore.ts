@@ -78,7 +78,7 @@ let abortController: AbortController | null = null
 
 function createMessageState(role: 'user' | 'assistant', content = ''): MessageState {
   return {
-    type: role === 'user' ? 'right' : 'left',
+    type: role == 'user' ? 'right' : 'left',
     content,
     tag: '',
     cancelled: false,
@@ -137,7 +137,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
 
   loadMoreSessions: async () => {
     const state = get()
-    if (state.isEndOfHistory || state.sessionsStatus === 'loading') return
+    if (state.isEndOfHistory || state.sessionsStatus == 'loading') return
     const offset = state.sessions.length
     try {
       const result = await api.fetchSessions(50, offset)
@@ -162,7 +162,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       return {
         sessions: state.sessions.filter((s) => s.id !== id),
         messagesBySessionId: rest,
-        activeSessionId: state.activeSessionId === id ? null : state.activeSessionId,
+        activeSessionId: state.activeSessionId == id ? null : state.activeSessionId,
       }
     })
   },
@@ -171,10 +171,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const trimmed = title.trim()
     if (!trimmed) return
 
-    const previousTitle = get().sessions.find((s) => s.id === id)?.title
+    const previousTitle = get().sessions.find((s) => s.id == id)?.title
 
     set((state) => ({
-      sessions: state.sessions.map((s) => (s.id === id ? { ...s, title: trimmed } : s)),
+      sessions: state.sessions.map((s) => (s.id == id ? { ...s, title: trimmed } : s)),
     }))
 
     try {
@@ -183,7 +183,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       // Roll back on failure so the UI doesn't show a title that never saved.
       set((state) => ({
         sessions: state.sessions.map((s) =>
-          s.id === id ? { ...s, title: previousTitle ?? s.title } : s,
+          s.id == id ? { ...s, title: previousTitle ?? s.title } : s,
         ),
       }))
     }
@@ -191,13 +191,13 @@ export const useChatStore = create<ChatState>()((set, get) => ({
 
   togglePinSession: async (id: string) => {
     const state = get()
-    const session = state.sessions.find((s) => s.id === id)
+    const session = state.sessions.find((s) => s.id == id)
     if (!session) return
     const newPinned = !session.pinned
 
     set((s) => ({
       sessions: s.sessions
-        .map((sess) => (sess.id === id ? { ...sess, pinned: newPinned } : sess))
+        .map((sess) => (sess.id == id ? { ...sess, pinned: newPinned } : sess))
         .sort((a, b) => {
           if (a.pinned && !b.pinned) return -1
           if (!a.pinned && b.pinned) return 1
@@ -211,7 +211,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       // Roll back on failure
       set((s) => ({
         sessions: s.sessions
-          .map((sess) => (sess.id === id ? { ...sess, pinned: !newPinned } : sess))
+          .map((sess) => (sess.id == id ? { ...sess, pinned: !newPinned } : sess))
           .sort((a, b) => {
             if (a.pinned && !b.pinned) return -1
             if (!a.pinned && b.pinned) return 1
@@ -234,7 +234,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         result.messages.map(async (msg) => {
           const stored = msg.role !== 'user' ? await getStoredImages(sessionId, msg.id) : null
           return {
-            type: msg.role === 'user' ? 'right' : 'left',
+            type: msg.role == 'user' ? 'right' : 'left',
             content: msg.content,
             tag: categoryTag,
             cancelled: false,
@@ -257,9 +257,9 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       )
 
       set((state) => {
-        const sessions = state.sessions.some((s) => s.id === sessionId)
+        const sessions = state.sessions.some((s) => s.id == sessionId)
           ? state.sessions.map((s) =>
-              s.id === sessionId ? { ...s, title: result.session.title } : s,
+              s.id == sessionId ? { ...s, title: result.session.title } : s,
             )
           : state.sessions
 
@@ -283,7 +283,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const assistantMsg = createMessageState('assistant')
     assistantMsg.uuid = uuidv4()
 
-    const isNewChat = sessionId === null
+    const isNewChat = sessionId == null
     const tempKey = '__new__'
     let storageKey = isNewChat ? tempKey : sessionId
 
@@ -318,7 +318,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid === s.streamingMessageId
+                m.uuid == s.streamingMessageId
                   ? { ...m, content: m.content + token }
                   : m,
               )
@@ -350,7 +350,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
               // Update the title from a title_updated SSE event
               set((s) => ({
                 sessions: s.sessions.map((sess) =>
-                  sess.id === data.session_id
+                  sess.id == data.session_id
                     ? { ...sess, title: data.session_title }
                     : sess,
                 ),
@@ -358,7 +358,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             } else {
               set((s) => ({
                 sessions: s.sessions.map((sess) =>
-                  sess.id === sessionId ? { ...sess, title: data.session_title } : sess,
+                  sess.id == sessionId ? { ...sess, title: data.session_title } : sess,
                 ),
               }))
             }
@@ -367,7 +367,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid === s.streamingMessageId
+                m.uuid == s.streamingMessageId
                   ? { ...m, agentTools: data.tools, agentReasoning: data.reasoning ?? '' }
                   : m,
               )
@@ -380,7 +380,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid === s.streamingMessageId
+                m.uuid == s.streamingMessageId
                   ? { ...m, artifacts: [...m.artifacts, artifact as unknown as ArtifactData] }
                   : m,
               )
@@ -393,7 +393,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid === s.streamingMessageId
+                m.uuid == s.streamingMessageId
                   ? { ...m, images: [...m.images, image as GeneratedImage], imageStatus: '' }
                   : m,
               )
@@ -406,7 +406,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid === s.streamingMessageId
+                m.uuid == s.streamingMessageId
                   ? { ...m, imageStatus: message }
                   : m,
               )
@@ -419,7 +419,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid === s.streamingMessageId
+                m.uuid == s.streamingMessageId
                   ? { ...m, slides: [...m.slides, slide as unknown as SlideDeck], slideStatus: '', slideStages: {} }
                   : m,
               )
@@ -450,7 +450,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid === s.streamingMessageId
+                m.uuid == s.streamingMessageId
                   ? { ...m, sources: sources as SourceLink[] }
                   : m,
               )
@@ -485,11 +485,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         abortController.signal,
       )
     } catch (e) {
-      if ((e as Error).name === 'AbortError') {
+      if ((e as Error).name == 'AbortError') {
         set((s) => {
           const msgs = s.messagesBySessionId[storageKey] ?? []
           const updated = msgs.map((m) =>
-            m.uuid === s.streamingMessageId ? { ...m, cancelled: true } : m,
+            m.uuid == s.streamingMessageId ? { ...m, cancelled: true } : m,
           )
           return {
             messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
@@ -514,7 +514,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     assistantMsg.tag = category
     assistantMsg.uuid = uuidv4()
 
-    const isNewChat = sessionId === null
+    const isNewChat = sessionId == null
     const tempKey = '__new__'
     let storageKey = isNewChat ? tempKey : sessionId
 
@@ -548,7 +548,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid === s.streamingMessageId
+                m.uuid == s.streamingMessageId
                   ? { ...m, content: m.content + token }
                   : m,
               )
@@ -560,7 +560,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
           onTitleUpdated: (data) => {
             set((s) => ({
               sessions: s.sessions.map((sess) =>
-                sess.id === data.session_id
+                sess.id == data.session_id
                   ? { ...sess, title: data.session_title }
                   : sess,
               ),
@@ -569,7 +569,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
           onSessionId: (sid) => {
             if (isNewChat && sid) {
               // Guard: only migrate on the first session ID we receive
-              if (get().sessions.some((s) => s.id === sid)) {
+              if (get().sessions.some((s) => s.id == sid)) {
                 return
               }
               const msgs = get().messagesBySessionId[tempKey] ?? []
@@ -590,7 +590,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid === s.streamingMessageId
+                m.uuid == s.streamingMessageId
                   ? { ...m, sources: sources as SourceLink[] }
                   : m,
               )
@@ -625,11 +625,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         abortController.signal,
       )
     } catch (e) {
-      if ((e as Error).name === 'AbortError') {
+      if ((e as Error).name == 'AbortError') {
         set((s) => {
           const msgs = s.messagesBySessionId[storageKey] ?? []
           const updated = msgs.map((m) =>
-            m.uuid === s.streamingMessageId ? { ...m, cancelled: true } : m,
+            m.uuid == s.streamingMessageId ? { ...m, cancelled: true } : m,
           )
           return {
             messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
@@ -656,18 +656,18 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const msgs = state.messagesBySessionId[sessionId] ?? []
 
     // Find the assistant message being regenerated
-    const msgIndex = msgs.findIndex((m) => m.assistantMessageId === assistantMessageId)
-    if (msgIndex === -1) return
+    const msgIndex = msgs.findIndex((m) => m.assistantMessageId == assistantMessageId)
+    if (msgIndex == -1) return
 
     // Find the preceding user message
     let userIndex = -1
     for (let i = msgIndex - 1; i >= 0; i--) {
-      if (msgs[i].type === 'right') {
+      if (msgs[i].type == 'right') {
         userIndex = i
         break
       }
     }
-    if (userIndex === -1) return
+    if (userIndex == -1) return
 
     const userMsg = msgs[userIndex]
     const truncateId = userMsg.dbId
@@ -702,7 +702,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     // Truncate locally
     const state = get()
     const msgs = state.messagesBySessionId[sessionId] ?? []
-    const truncateIndex = msgs.findIndex((m) => m.dbId === fromMessageId)
+    const truncateIndex = msgs.findIndex((m) => m.dbId == fromMessageId)
     if (truncateIndex >= 0) {
       const trimmed = msgs.slice(0, truncateIndex)
       set({
@@ -725,7 +725,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       const updatedMsgs: Record<string, MessageState[]> = {}
       for (const [sid, msgs] of Object.entries(state.messagesBySessionId)) {
         updatedMsgs[sid] = msgs.map((m) =>
-          m.assistantMessageId === messageId ? { ...m, is_helpful: isHelpful } : m,
+          m.assistantMessageId == messageId ? { ...m, is_helpful: isHelpful } : m,
         )
       }
       return { messagesBySessionId: updatedMsgs }
@@ -742,7 +742,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
           updatedMsgs[sessionId] = msgs.map((msg) => ({
             ...msg,
             slides: msg.slides.map((deck) =>
-              deck.deckId === result.deck_id
+              deck.deckId == result.deck_id
                 ? {
                     ...deck,
                     html: result.html_fragment ?? deck.html,

@@ -17,7 +17,7 @@ interface FilePreviewProps {
 }
 
 export default function FilePreview({ files, onRemove, className }: FilePreviewProps) {
-  if (files.length === 0) return null
+  if (files.length == 0) return null
 
   return (
     <div className={cn('flex flex-wrap gap-2', className)}>

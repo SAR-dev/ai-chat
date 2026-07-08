@@ -32,7 +32,7 @@ export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
   useEffect(() => {
     if (!open) return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key == 'Escape') {
         onOpenChange(false)
       }
     }
@@ -64,7 +64,7 @@ export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
       for (const msg of msgs) {
         const idx = msg.content.toLowerCase().indexOf(q)
         if (idx !== -1) {
-          const session = sessions.find((s) => s.id === sessionId)
+          const session = sessions.find((s) => s.id == sessionId)
           const title = session?.title ?? sessionId
           const start = Math.max(0, idx - 40)
           const end = Math.min(msg.content.length, idx + q.length + 40)
@@ -98,7 +98,7 @@ export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
           className="w-full rounded-t-xl border-0 bg-transparent px-4 py-3.5 text-sm outline-none placeholder:text-gray-400"
         />
         <div className="border-t px-2 py-2">
-          {query.trim() && results.length === 0 && (
+          {query.trim() && results.length == 0 && (
             <p className="text-muted-foreground px-2 py-4 text-center text-sm">
               {t('common.noResults')}
             </p>

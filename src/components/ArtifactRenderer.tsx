@@ -19,13 +19,13 @@ import type { ArtifactData } from '@/types'
 
 function KpiCard({ kpi }: { kpi: NonNullable<ArtifactData['kpis']>[number] }) {
   const trendColor =
-    kpi.trend === 'up'
+    kpi.trend == 'up'
       ? 'text-green-600'
-      : kpi.trend === 'down'
+      : kpi.trend == 'down'
         ? 'text-red-600'
         : 'text-muted-foreground'
   const trendIcon =
-    kpi.trend === 'up' ? '↑' : kpi.trend === 'down' ? '↓' : '→'
+    kpi.trend == 'up' ? '↑' : kpi.trend == 'down' ? '↓' : '→'
 
   return (
     <div className="border-border bg-card rounded-xl border p-4">
@@ -78,7 +78,7 @@ function ChartView({ artifact }: { artifact: ArtifactData }) {
   const series = artifact.series ?? []
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
 
-  if (data.length === 0) return null
+  if (data.length == 0) return null
 
   const dataKeys = series.length > 0
     ? series.map((s) => s.key)
@@ -88,7 +88,7 @@ function ChartView({ artifact }: { artifact: ArtifactData }) {
     switch (chartType) {
       case 'line':
       case 'forecast': {
-        const isForecast = chartType === 'forecast'
+        const isForecast = chartType == 'forecast'
         return (
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -102,7 +102,7 @@ function ChartView({ artifact }: { artifact: ArtifactData }) {
                 dataKey={key}
                 stroke={colors[i % colors.length]}
                 strokeWidth={2}
-                strokeDasharray={isForecast && i === dataKeys.length - 1 ? '5 5' : undefined}
+                strokeDasharray={isForecast && i == dataKeys.length - 1 ? '5 5' : undefined}
                 dot={false}
               />
             ))}
@@ -202,7 +202,7 @@ function ChartView({ artifact }: { artifact: ArtifactData }) {
 export default function ArtifactRenderer({ artifact }: { artifact: ArtifactData }) {
   const artifactType = artifact.artifact_type
 
-  if (artifactType === 'kpi_card' && artifact.kpis) {
+  if (artifactType == 'kpi_card' && artifact.kpis) {
     return (
       <div className="my-3 grid gap-3" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(180px, 1fr))` }}>
         {artifact.kpis.map((kpi, i) => (
@@ -212,7 +212,7 @@ export default function ArtifactRenderer({ artifact }: { artifact: ArtifactData 
     )
   }
 
-  if (artifactType === 'table') {
+  if (artifactType == 'table') {
     return (
       <div className="border-border bg-card my-3 rounded-xl border p-3">
         {artifact.title && <p className="mb-2 text-sm font-medium">{artifact.title}</p>}
@@ -221,7 +221,7 @@ export default function ArtifactRenderer({ artifact }: { artifact: ArtifactData 
     )
   }
 
-  if (artifactType === 'chart') {
+  if (artifactType == 'chart') {
     return (
       <div className="border-border bg-card my-3 rounded-xl border p-3">
         {artifact.title && <p className="mb-2 text-sm font-medium">{artifact.title}</p>}

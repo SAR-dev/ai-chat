@@ -88,7 +88,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
   const sendRagMessage = useChatStore((s) => s.sendRagMessage)
   const stopStreaming = useChatStore((s) => s.stopStreaming)
   const isStreaming = useChatStore((s) => s.isStreaming)
-  const isLoading = useChatStore((s) => s.messagesStatus === 'loading')
+  const isLoading = useChatStore((s) => s.messagesStatus == 'loading')
   const categories = useChatStore((s) => s.categories)
   const fetchCategories = useChatStore((s) => s.fetchCategories)
 
@@ -147,7 +147,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
 
   const removeFile = useCallback((id: string) => {
     setPendingFiles((prev) => {
-      const file = prev.find((f) => f.id === id)
+      const file = prev.find((f) => f.id == id)
       if (file?.preview) URL.revokeObjectURL(file.preview)
       return prev.filter((f) => f.id !== id)
     })
@@ -155,7 +155,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
 
   const handleSend = useCallback(async () => {
     const content = input.trim()
-    if (!content && pendingFiles.length === 0) return
+    if (!content && pendingFiles.length == 0) return
     setInput('')
     setPendingFiles([])
 
@@ -178,7 +178,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
           internet_search: internetSearch,
           agent_mode: agentMode,
         },
-        newSessionId === null ? (id) => navigate(`/chat/${id}`) : undefined,
+        newSessionId == null ? (id) => navigate(`/chat/${id}`) : undefined,
       )
     } else {
       const targetSessionId = sessionId ?? null
@@ -191,14 +191,14 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
           internet_search: internetSearch,
           agent_mode: agentMode,
         },
-        targetSessionId === null ? (id) => navigate(`/chat/${id}`) : undefined,
+        targetSessionId == null ? (id) => navigate(`/chat/${id}`) : undefined,
       )
     }
   }, [input, pendingFiles, sessionId, navigate, sendChatMessage, sendRagMessage, mode, slideStyle, internetSearch, agentMode, category, selectedCategory])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key == 'Enter' && !e.shiftKey) {
         e.preventDefault()
         handleSend()
       }
@@ -216,9 +216,9 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
   )
 
   const canSend = !disabled && (input.trim().length > 0 || pendingFiles.length > 0)
-  const isHero = variant === 'hero'
-  const activeMode = MODES.find((m) => m.id === mode) ?? MODES[0]
-  const activeSlideStyle = SLIDE_STYLES.find((s) => s.id === slideStyle) ?? SLIDE_STYLES[0]
+  const isHero = variant == 'hero'
+  const activeMode = MODES.find((m) => m.id == mode) ?? MODES[0]
+  const activeSlideStyle = SLIDE_STYLES.find((s) => s.id == slideStyle) ?? SLIDE_STYLES[0]
   const ActiveModeIcon = activeMode.icon
   const ActiveSlideIcon = activeSlideStyle.icon
 

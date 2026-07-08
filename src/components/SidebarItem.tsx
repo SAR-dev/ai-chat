@@ -145,8 +145,8 @@ export default function SidebarItem({
                 onChange={(e) => setEditTitle(e.target.value)}
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleRename()
-                  if (e.key === 'Escape') setIsRenameOpen(false)
+                  if (e.key == 'Enter') handleRename()
+                  if (e.key == 'Escape') setIsRenameOpen(false)
                 }}
               />
             </div>

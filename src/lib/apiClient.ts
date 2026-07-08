@@ -195,55 +195,55 @@ async function streamFromURL(
       try {
         const data = JSON.parse(dataStr)
 
-        if (eventType === 'title_updated') {
+        if (eventType == 'title_updated') {
           callbacks.onTitleUpdated?.(data)
           continue
         }
 
-        if (eventType === 'agent_tools') {
+        if (eventType == 'agent_tools') {
           callbacks.onAgentTools?.(data)
           continue
         }
 
         // Events with type field in data
-        if (data.type === 'artifact') {
+        if (data.type == 'artifact') {
           callbacks.onArtifact?.(data.artifact)
           continue
         }
 
-        if (data.type === 'image') {
+        if (data.type == 'image') {
           callbacks.onImage?.(data.image)
           continue
         }
 
-        if (data.type === 'image_status') {
+        if (data.type == 'image_status') {
           callbacks.onImageStatus?.(data.message)
           continue
         }
 
-        if (data.type === 'slide') {
+        if (data.type == 'slide') {
           callbacks.onSlide?.(data.slide)
           continue
         }
 
-        if (data.type === 'slide_status') {
+        if (data.type == 'slide_status') {
           callbacks.onSlideStatus?.(data)
           continue
         }
 
-        if (data.type === 'sources') {
+        if (data.type == 'sources') {
           callbacks.onSources?.(data.sources)
           continue
         }
 
-        if (data.type === 'start') {
+        if (data.type == 'start') {
           if (data.session_id) {
             callbacks.onSessionId?.(String(data.session_id))
           }
           continue
         }
 
-        if (data.type === 'done') {
+        if (data.type == 'done') {
           flushTokens()
           callbacks.onDone?.(data.assistant_message_id)
           continue
@@ -258,7 +258,7 @@ async function streamFromURL(
         }
 
         // Plain string
-        if (typeof data === 'string') {
+        if (typeof data == 'string') {
           pushToken(data)
           continue
         }

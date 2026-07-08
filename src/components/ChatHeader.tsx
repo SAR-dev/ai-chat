@@ -22,7 +22,7 @@ interface ChatHeaderProps {
  */
 export default function ChatHeader({ sessionId }: ChatHeaderProps) {
   const { t } = useTranslation()
-  const title = useChatStore((s) => s.sessions.find((sess) => sess.id === sessionId)?.title)
+  const title = useChatStore((s) => s.sessions.find((sess) => sess.id == sessionId)?.title)
   const renameSession = useChatStore((s) => s.renameSession)
 
   const [isRenameOpen, setIsRenameOpen] = useState(false)
@@ -52,7 +52,7 @@ export default function ChatHeader({ sessionId }: ChatHeaderProps) {
           className="group/title flex min-w-0 items-center gap-1.5 text-left"
         >
           <h1 className="text-foreground/90 truncate text-sm font-medium">{displayTitle}</h1>
-          <Pencil className="text-muted-foreground h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity group-hover/title:opacity-100" />
+          <Pencil className="text-muted-foreground h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity group-hover/title:opacity-100 cursor-pointer" />
         </button>
       </div>
 
@@ -75,8 +75,8 @@ export default function ChatHeader({ sessionId }: ChatHeaderProps) {
                 autoFocus
                 maxLength={200}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleRename()
-                  if (e.key === 'Escape') setIsRenameOpen(false)
+                  if (e.key == 'Enter') handleRename()
+                  if (e.key == 'Escape') setIsRenameOpen(false)
                 }}
               />
             </div>

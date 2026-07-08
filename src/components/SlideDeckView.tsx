@@ -41,7 +41,7 @@ export default function SlideDeckView({ deck }: SlideDeckViewProps) {
 
   useEffect(() => {
     const onFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement === previewRef.current)
+      setIsFullscreen(document.fullscreenElement == previewRef.current)
     }
     document.addEventListener('fullscreenchange', onFullscreenChange)
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
@@ -112,11 +112,11 @@ export default function SlideDeckView({ deck }: SlideDeckViewProps) {
               key={i}
               variant="outline"
               size="sm"
-              disabled={regeneratingSlide === i}
+              disabled={regeneratingSlide == i}
               onClick={() => handleRegenerate(i)}
               className="text-xs"
             >
-              <RefreshCw className={`mr-1 h-3 w-3 ${regeneratingSlide === i ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`mr-1 h-3 w-3 ${regeneratingSlide == i ? 'animate-spin' : ''}`} />
               Slide {i + 1}
             </Button>
           ))}

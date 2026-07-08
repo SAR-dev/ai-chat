@@ -93,7 +93,7 @@ export function useChatScroll({ viewportRef, contentRef, deps = [], resetKey }: 
   // Hard reset when switching conversations: a "scrolled up" state from the
   // previous conversation must never carry over and suppress auto-scroll here.
   useEffect(() => {
-    if (resetKey === undefined) return
+    if (resetKey == undefined) return
     userScrolledUp.current = false
     setShowJumpButton(false)
     setIsAtBottom(true)
