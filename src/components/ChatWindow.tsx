@@ -4,7 +4,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import ChatMessage from '@/components/ChatMessage'
 import TypingIndicator from '@/components/TypingIndicator'
-import Mascot from '@/components/Mascot'
 import { useChatStore } from '@/stores/chatStore'
 
 interface ChatWindowProps {
@@ -54,7 +53,7 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
   if (messages.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3">
-        <Mascot expression="thinking" className="h-16 w-16" />
+        <img src="/mascot/victory-pose.png" alt="" className="h-16 w-16 object-contain" aria-hidden />
         <p className="text-muted-foreground text-sm">{t('chat.emptyConversation')}</p>
       </div>
     )
