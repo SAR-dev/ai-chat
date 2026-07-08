@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -42,6 +41,35 @@ export default function ChatMessage({
   const isUser = message.type === 'right'
   const displayContent = isStreaming ? (streamingContent ?? '') : message.content
   const [isEditing, setIsEditing] = useState(false)
+  const [revealed, setRevealed] = useState(displayContent)
+  const targetRef = useRef(displayContent)
+
+  useEffect(() => {
+    targetRef.current = displayContent
+  }, [displayContent])
+
+  useEffect(() => {
+    if (!isStreaming) return
+
+    let rafId: number
+
+    const tick = () => {
+      const full = targetRef.current
+      setRevealed((prev) => {
+        if (prev.length >= full.length) return prev
+        const remaining = full.length - prev.length
+        const step = Math.max(1, Math.ceil(remaining / 30))
+        rafId = requestAnimationFrame(tick)
+        return full.slice(0, prev.length + step)
+      })
+    }
+
+    rafId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId)
+  }, [isStreaming])
+
+  const contentToRender = !isStreaming ? displayContent : revealed
+
   const [zoomIndex, setZoomIndex] = useState<number | null>(null)
   const [editContent, setEditContent] = useState(message.content)
   const editAndResend = useChatStore((s) => s.editAndResend)
@@ -189,16 +217,7 @@ export default function ChatMessage({
           </div>
         ) : (
           <div className="min-w-0 break-words">
-            <MarkdownRenderer content={displayContent} sources={message.sources} />
-            {isStreaming && (
-              <motion.span
-                animate={{ opacity: [1, 0, 1] }}
-                transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
-                className="text-foreground ml-0.5 inline-block font-mono text-sm leading-relaxed"
-              >
-                ▍
-              </motion.span>
-            )}
+            <MarkdownRenderer content={contentToRender} sources={message.sources} />
 
             {message.sources.length > 0 && (
               <div className="mt-3 space-y-1">
