@@ -195,7 +195,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
         internet_search: internetSearch,
         agent_mode: agentMode,
       })
-      if (effectiveSessionId !== targetSessionId && sessionId === targetSessionId) {
+      if (effectiveSessionId !== targetSessionId) {
         navigate(`/chat/${effectiveSessionId}`, { replace: true })
       }
     }

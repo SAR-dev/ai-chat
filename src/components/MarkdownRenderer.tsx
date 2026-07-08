@@ -167,42 +167,42 @@ const components: Components = {
   },
   h1({ children, ...props }) {
     return (
-      <h1 className="mt-8 mb-3 text-2xl font-semibold tracking-tight first:mt-0" {...props}>
+      <h1 className="mt-8 mb-3 text-2xl font-semibold tracking-tight first:mt-0 [&_a]:no-underline" {...props}>
         {children}
       </h1>
     )
   },
   h2({ children, ...props }) {
     return (
-      <h2 className="mt-7 mb-3 text-xl font-semibold tracking-tight first:mt-0" {...props}>
+      <h2 className="mt-7 mb-3 text-xl font-semibold tracking-tight first:mt-0 [&_a]:no-underline" {...props}>
         {children}
       </h2>
     )
   },
   h3({ children, ...props }) {
     return (
-      <h3 className="mt-6 mb-2 text-lg font-semibold first:mt-0" {...props}>
+      <h3 className="mt-6 mb-2 text-lg font-semibold first:mt-0 [&_a]:no-underline" {...props}>
         {children}
       </h3>
     )
   },
   h4({ children, ...props }) {
     return (
-      <h4 className="mt-5 mb-2 text-base font-semibold first:mt-0" {...props}>
+      <h4 className="mt-5 mb-2 text-base font-semibold first:mt-0 [&_a]:no-underline" {...props}>
         {children}
       </h4>
     )
   },
   h5({ children, ...props }) {
     return (
-      <h5 className="mt-4 mb-2 text-sm font-semibold first:mt-0" {...props}>
+      <h5 className="mt-4 mb-2 text-sm font-semibold first:mt-0 [&_a]:no-underline" {...props}>
         {children}
       </h5>
     )
   },
   h6({ children, ...props }) {
     return (
-      <h6 className="text-muted-foreground mt-4 mb-2 text-sm font-semibold first:mt-0" {...props}>
+      <h6 className="text-muted-foreground mt-4 mb-2 text-sm font-semibold first:mt-0 [&_a]:no-underline" {...props}>
         {children}
       </h6>
     )

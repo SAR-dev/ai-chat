@@ -29,16 +29,17 @@ type LoginMode = 'ad' | 'standard'
 export default function LoginPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { login } = useAuthStore()
-  const settings = useSettingsStore()
+  const login = useAuthStore((s) => s.login)
+  const settingsLanguage = useSettingsStore((s) => s.language)
+  const setLanguage = useSettingsStore((s) => s.setLanguage)
   const [mode, setMode] = useState<LoginMode>('ad')
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [language, setLanguage] = useState(settings.language)
+  const [language, setLocalLanguage] = useState(settingsLanguage)
 
   const handleLanguageChange = (value: string) => {
+    setLocalLanguage(value)
     setLanguage(value)
-    settings.setLanguage(value)
     i18n.changeLanguage(value)
   }
 

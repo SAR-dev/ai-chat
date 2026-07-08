@@ -68,3 +68,31 @@ export async function clearStoredImages(sessionId: string): Promise<void> {
     }
   }
 }
+
+export async function migrateImageKeys(
+  oldSessionId: string,
+  newSessionId: string,
+): Promise<void> {
+  const db = await openDB()
+  const tx = db.transaction(STORE_NAME, 'readwrite')
+  const store = tx.objectStore(STORE_NAME)
+  const req = store.openCursor()
+  return new Promise((resolve) => {
+    req.onsuccess = () => {
+      const cursor = req.result
+      if (cursor) {
+        const key = cursor.key as string
+        if (key.startsWith(`${oldSessionId}:`)) {
+          const record = cursor.value as ImageRecord
+          const newKey = key.replace(`${oldSessionId}:`, `${newSessionId}:`)
+          store.delete(key)
+          store.put({ key: newKey, images: record.images })
+        }
+        cursor.continue()
+      } else {
+        resolve()
+      }
+    }
+    req.onerror = () => resolve()
+  })
+}

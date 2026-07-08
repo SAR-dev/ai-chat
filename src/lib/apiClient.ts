@@ -125,27 +125,41 @@ async function streamFromURL(
   if (!reader) throw new Error('No response body')
 
   const decoder = new TextDecoder()
-  const buffer: string[] = []
 
-  function flushBuffer() {
-    if (buffer.length > 0) {
-      const text = buffer.join('')
-      buffer.length = 0
-      callbacks.onToken?.(text)
+  // Token pacing: display tokens at a constant rate regardless of API delivery speed
+  const DISPLAY_INTERVAL = 40
+  let tokenQueue: string[] = []
+  let displayTimer: ReturnType<typeof setTimeout> | null = null
+
+  function pushToken(token: string) {
+    tokenQueue.push(token)
+    if (!displayTimer) {
+      displayTimer = setTimeout(displayNext, DISPLAY_INTERVAL)
+    }
+  }
+
+  function displayNext() {
+    displayTimer = null
+    if (tokenQueue.length > 0) {
+      callbacks.onToken?.(tokenQueue.shift()!)
+    }
+    if (tokenQueue.length > 0) {
+      displayTimer = setTimeout(displayNext, DISPLAY_INTERVAL)
+    }
+  }
+
+  function flushTokens() {
+    if (displayTimer) {
+      clearTimeout(displayTimer)
+      displayTimer = null
+    }
+    while (tokenQueue.length > 0) {
+      callbacks.onToken?.(tokenQueue.shift()!)
     }
   }
 
   // SSE parsing
   let raw = ''
-  let flushTimer: ReturnType<typeof setTimeout> | null = null
-
-  function scheduleFlush() {
-    if (flushTimer) clearTimeout(flushTimer)
-    flushTimer = setTimeout(() => {
-      flushBuffer()
-      flushTimer = null
-    }, 70)
-  }
 
   while (true) {
     const { done, value } = await reader.read()
@@ -219,7 +233,7 @@ async function streamFromURL(
         }
 
         if (data.type === 'done') {
-          flushBuffer()
+          flushTokens()
           callbacks.onDone?.(data.assistant_message_id)
           continue
         }
@@ -228,28 +242,24 @@ async function streamFromURL(
         const tokenText =
           data.content ?? data.chunk ?? data.delta ?? data.reply ?? data.answer ?? data.full_text ?? null
         if (tokenText !== null) {
-          buffer.push(String(tokenText))
-          scheduleFlush()
+          pushToken(String(tokenText))
           continue
         }
 
         // Plain string
         if (typeof data === 'string') {
-          buffer.push(data)
-          scheduleFlush()
+          pushToken(data)
           continue
         }
       } catch {
         // Not JSON — treat as plain text token
-        buffer.push(dataStr)
-        scheduleFlush()
+        pushToken(dataStr)
       }
     }
   }
 
   // Final flush
-  flushBuffer()
-  if (flushTimer) clearTimeout(flushTimer)
+  flushTokens()
 
   return sessionId
 }

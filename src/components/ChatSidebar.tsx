@@ -29,9 +29,14 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
   const [searchOpen, setSearchOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  const { sessions, sessionsStatus, loadSessions, createSession, deleteSession, renameSession, togglePinSession } =
-    useChatStore()
-  const { user } = useAuthStore()
+  const sessions = useChatStore((s) => s.sessions)
+  const sessionsStatus = useChatStore((s) => s.sessionsStatus)
+  const loadSessions = useChatStore((s) => s.loadSessions)
+  const createSession = useChatStore((s) => s.createSession)
+  const deleteSession = useChatStore((s) => s.deleteSession)
+  const renameSession = useChatStore((s) => s.renameSession)
+  const togglePinSession = useChatStore((s) => s.togglePinSession)
+  const user = useAuthStore((s) => s.user)
 
   useEffect(() => {
     loadSessions()

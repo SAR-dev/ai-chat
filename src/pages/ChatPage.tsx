@@ -41,7 +41,10 @@ export default function ChatPage() {
       try {
         const session = await createSession()
         navigate(`/chat/${session.id}`)
-        await sendChatMessage(session.id, prompt)
+        const realId = await sendChatMessage(session.id, prompt)
+        if (realId !== session.id) {
+          navigate(`/chat/${realId}`, { replace: true })
+        }
       } finally {
         setIsStarting(false)
       }

@@ -19,7 +19,8 @@ export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
-  const { sessions, messagesBySessionId } = useChatStore()
+  const sessions = useChatStore((s) => s.sessions)
+  const messagesBySessionId = useChatStore((s) => s.messagesBySessionId)
 
   useEffect(() => {
     if (open) {

@@ -32,13 +32,16 @@ interface SettingsModalProps {
 export default function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { user, logout } = useAuthStore()
-  const settings = useSettingsStore()
+  const user = useAuthStore((s) => s.user)
+  const logout = useAuthStore((s) => s.logout)
+  const settingsLanguage = useSettingsStore((s) => s.language)
+  const setLanguage = useSettingsStore((s) => s.setLanguage)
+  const resetDefaults = useSettingsStore((s) => s.resetDefaults)
 
   const { setValue, watch } = useForm({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      language: settings.language,
+      language: settingsLanguage,
     },
   })
 
@@ -47,13 +50,13 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
   const handleLanguageChange = (value: string | null) => {
     if (!value) return
     setValue('language', value)
-    settings.setLanguage(value)
+    setLanguage(value)
     i18n.changeLanguage(value)
     toast.success(t('settings.saved'))
   }
 
   const handleReset = () => {
-    settings.resetDefaults()
+    resetDefaults()
     setValue('language', 'en')
     i18n.changeLanguage('en')
     toast.success(t('settings.saved'))

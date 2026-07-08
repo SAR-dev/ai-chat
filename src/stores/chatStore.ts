@@ -12,7 +12,7 @@ import type {
   Category,
 } from '@/types'
 import * as api from '@/lib/apiClient'
-import { storeImages, getStoredImages } from '@/lib/imageStore'
+import { storeImages, getStoredImages, migrateImageKeys } from '@/lib/imageStore'
 
 interface ChatState {
   sessions: ChatSessionSummary[]
@@ -69,7 +69,6 @@ interface ChatState {
 }
 
 let abortController: AbortController | null = null
-let currentRequestId: string | null = null
 
 function createMessageState(role: 'user' | 'assistant', content = ''): MessageState {
   return {
@@ -307,6 +306,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     // continues *this* conversation instead of quietly starting a new one
     // (which is what was causing duplicate entries to appear in the sidebar).
     let realSessionId: string | null = null
+    let receivedTitle: string | null = null
 
     try {
       await api.chatStream(
@@ -337,16 +337,17 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             if (isPlaceholder && data.session_id !== sessionId) {
               realSessionId = data.session_id
             }
+            receivedTitle = data.session_title
             set((s) => {
-              // Replace our optimistic placeholder (or an existing real entry
-              // with this id) rather than blindly prepending -- prepending
-              // unconditionally is what produced the duplicate-looking rows.
-              const withoutStale = s.sessions.filter(
-                (sess) => sess.id !== sessionId && sess.id !== data.session_id,
+              // Update both the placeholder (sessionId) and the real session
+              // (data.session_id). If loadSessions already ran and replaced the
+              // placeholder with server data, the real session gets the title.
+              const sessions = s.sessions.map((sess) =>
+                sess.id === sessionId || sess.id === data.session_id
+                  ? { ...sess, title: data.session_title }
+                  : sess,
               )
-              return {
-                sessions: [{ id: data.session_id, title: data.session_title }, ...withoutStale],
-              }
+              return { sessions }
             })
           },
           onAgentTools: (data) => {
@@ -383,12 +384,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                   ? { ...m, images: [...m.images, image as GeneratedImage], imageStatus: '' }
                   : m,
               )
-              // Persist to IndexedDB
-              const streamingMsg = msgs.find((m) => m.uuid === s.streamingMessageId)
-              if (streamingMsg?.assistantMessageId) {
-                const currentImages = [...(streamingMsg.images as GeneratedImage[]), image as GeneratedImage]
-                storeImages(sessionId, streamingMsg.assistantMessageId, currentImages)
-              }
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
               }
@@ -452,13 +447,15 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             })
           },
           onDone: (assistantMessageId) => {
+            const imagesToStore: { sessionId: string; msgId: number; images: GeneratedImage[] }[] = []
             set((s) => {
               const msgs = s.messagesBySessionId[sessionId] ?? []
               const updated = msgs.map((m) => {
                 if (m.uuid !== s.streamingMessageId) return m
                 const msgId = assistantMessageId ?? null
+                const targetSid = realSessionId ?? sessionId
                 if (msgId && m.images.length > 0) {
-                  storeImages(sessionId, msgId, m.images as GeneratedImage[])
+                  imagesToStore.push({ sessionId: targetSid, msgId, images: m.images as GeneratedImage[] })
                 }
                 return { ...m, assistantMessageId: msgId }
               })
@@ -468,6 +465,9 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                 streamingMessageId: null,
               }
             })
+            for (const { sessionId: sid, msgId, images } of imagesToStore) {
+              storeImages(sid, msgId, images)
+            }
           },
         },
         abortController.signal,
@@ -492,13 +492,23 @@ export const useChatStore = create<ChatState>()((set, get) => ({
 
     if (realSessionId) {
       const newId: string = realSessionId
+      const titleToApply = receivedTitle
       set((s) => {
         const { [sessionId]: messagesToMove, ...restMessages } = s.messagesBySessionId
+        const sessions = s.sessions.map((sess) =>
+          sess.id === sessionId ? { ...sess, id: newId } : sess,
+        )
         return {
           messagesBySessionId: { ...restMessages, [newId]: messagesToMove ?? [] },
+          sessions: titleToApply
+            ? sessions.map((sess) =>
+                sess.id === newId ? { ...sess, title: titleToApply } : sess,
+              )
+            : sessions,
           activeSessionId: s.activeSessionId === sessionId ? newId : s.activeSessionId,
         }
       })
+      migrateImageKeys(sessionId, newId).catch(() => {})
       return newId
     }
 
@@ -567,13 +577,14 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             })
           },
           onDone: (assistantMessageId) => {
+            const imagesToStore: { sessionId: string; msgId: number; images: GeneratedImage[] }[] = []
             set((s) => {
               const msgs = s.messagesBySessionId[sessionId] ?? []
               const updated = msgs.map((m) => {
                 if (m.uuid !== s.streamingMessageId) return m
                 const msgId = assistantMessageId ?? null
                 if (msgId && m.images.length > 0) {
-                  storeImages(sessionId, msgId, m.images as GeneratedImage[])
+                  imagesToStore.push({ sessionId, msgId, images: m.images as GeneratedImage[] })
                 }
                 return { ...m, assistantMessageId: msgId }
               })
@@ -583,6 +594,9 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                 streamingMessageId: null,
               }
             })
+            for (const { sessionId: sid, msgId, images } of imagesToStore) {
+              storeImages(sid, msgId, images)
+            }
           },
         },
         abortController.signal,
@@ -610,10 +624,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     if (abortController) {
       abortController.abort()
       abortController = null
-    }
-    if (currentRequestId) {
-      api.cancelRequest(currentRequestId).catch(() => {})
-      currentRequestId = null
     }
   },
 
