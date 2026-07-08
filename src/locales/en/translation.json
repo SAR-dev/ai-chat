@@ -44,7 +44,9 @@
     "emailRequired": "Email is required",
     "emailInvalid": "Invalid email address",
     "adDomainHint": "e.g. domain\\username",
-    "noAccount": "Don't have an account?"
+    "noAccount": "Don't have an account?",
+    "kiwiHint": "Use the same username and password you use to login Kiwi",
+    "contactAdmin": "If you do not have an account, please contact the administrator."
   },
   "sidebar": {
     "newChat": "New Chat",

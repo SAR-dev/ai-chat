@@ -44,7 +44,9 @@
     "emailRequired": "メールアドレスは必須です",
     "emailInvalid": "無効なメールアドレスです",
     "adDomainHint": "例: domain\\username",
-    "noAccount": "アカウントをお持ちでないですか？"
+    "noAccount": "アカウントをお持ちでないですか？",
+    "kiwiHint": "Kiwiにログインするときと同じユーザー名とパスワードを使用してください",
+    "contactAdmin": "アカウントをお持ちでない場合は、管理者にお問い合わせください。"
   },
   "sidebar": {
     "newChat": "新しいチャット",
