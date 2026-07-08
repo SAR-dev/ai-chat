@@ -30,7 +30,6 @@ interface ChatState {
   fetchCategories: () => Promise<void>
   loadMoreSessions: () => Promise<void>
   deleteSession: (id: string) => Promise<void>
-  renameSession: (id: string, title: string) => Promise<void>
   togglePinSession: (id: string) => Promise<void>
   setActiveSession: (id: string | null) => void
   loadMessages: (sessionId: string) => Promise<void>
@@ -146,7 +145,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         isEndOfHistory: result.count <= offset + result.sessions.length,
       }))
     } catch {
-      // ignore
+      void 0
     }
   },
 
@@ -154,7 +153,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     try {
       await api.deleteSessionApi(id)
     } catch {
-      // ignore
+      void 0
     }
     set((state) => {
       const rest = { ...state.messagesBySessionId }
@@ -165,28 +164,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         activeSessionId: state.activeSessionId == id ? null : state.activeSessionId,
       }
     })
-  },
-
-  renameSession: async (id: string, title: string) => {
-    const trimmed = title.trim()
-    if (!trimmed) return
-
-    const previousTitle = get().sessions.find((s) => s.id == id)?.title
-
-    set((state) => ({
-      sessions: state.sessions.map((s) => (s.id == id ? { ...s, title: trimmed } : s)),
-    }))
-
-    try {
-      await api.renameSessionApi(id, trimmed)
-    } catch {
-      // Roll back on failure so the UI doesn't show a title that never saved.
-      set((state) => ({
-        sessions: state.sessions.map((s) =>
-          s.id == id ? { ...s, title: previousTitle ?? s.title } : s,
-        ),
-      }))
-    }
   },
 
   togglePinSession: async (id: string) => {
@@ -655,11 +632,9 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const state = get()
     const msgs = state.messagesBySessionId[sessionId] ?? []
 
-    // Find the assistant message being regenerated
     const msgIndex = msgs.findIndex((m) => m.assistantMessageId == assistantMessageId)
     if (msgIndex == -1) return
 
-    // Find the preceding user message
     let userIndex = -1
     for (let i = msgIndex - 1; i >= 0; i--) {
       if (msgs[i].type == 'right') {
@@ -672,34 +647,29 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const userMsg = msgs[userIndex]
     const truncateId = userMsg.dbId
 
-    // Truncate on server from this user message onwards
     if (truncateId) {
       try {
         await api.truncateMessages(sessionId, { from_message_id: truncateId })
       } catch {
-        // ignore
+        void 0
       }
     }
 
-    // Truncate locally from this user message onwards
     const trimmed = msgs.slice(0, userIndex)
     set({
       messagesBySessionId: { ...state.messagesBySessionId, [sessionId]: trimmed },
     })
 
-    // Re-send the user message content
     await get().sendChatMessage(sessionId, userMsg.content)
   },
 
   editAndResend: async (sessionId, fromMessageId, newContent) => {
-    // Truncate messages on server
     try {
       await api.truncateMessages(sessionId, { from_message_id: fromMessageId })
     } catch {
-      // ignore
+      void 0
     }
 
-    // Truncate locally
     const state = get()
     const msgs = state.messagesBySessionId[sessionId] ?? []
     const truncateIndex = msgs.findIndex((m) => m.dbId == fromMessageId)
@@ -710,7 +680,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       })
     }
 
-    // Send the new message
     await get().sendChatMessage(sessionId, newContent)
   },
 
@@ -718,9 +687,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     try {
       await api.submitFeedback(messageId, { is_helpful: isHelpful })
     } catch {
-      // ignore
+      void 0
     }
-    // Update local state immediately
     set((state) => {
       const updatedMsgs: Record<string, MessageState[]> = {}
       for (const [sid, msgs] of Object.entries(state.messagesBySessionId)) {
@@ -735,7 +703,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   regenerateSlide: async (deckId, slideId, instruction) => {
     try {
       const result = await api.regenerateSlide(deckId, slideId, { instruction })
-      // Update the slide HTML in the messages
       set((state) => {
         const updatedMsgs: Record<string, MessageState[]> = {}
         for (const [sessionId, msgs] of Object.entries(state.messagesBySessionId)) {
@@ -755,7 +722,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         return { messagesBySessionId: updatedMsgs }
       })
     } catch {
-      // ignore
+      void 0
     }
   },
 }))

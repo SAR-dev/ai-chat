@@ -32,7 +32,6 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
   const sessionsStatus = useChatStore((s) => s.sessionsStatus)
   const loadSessions = useChatStore((s) => s.loadSessions)
   const deleteSession = useChatStore((s) => s.deleteSession)
-  const renameSession = useChatStore((s) => s.renameSession)
   const togglePinSession = useChatStore((s) => s.togglePinSession)
   const user = useAuthStore((s) => s.user)
 
@@ -186,7 +185,6 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
                                 navigate(`/chat/${session.id}`)
                               }}
                               onDelete={() => handleDelete(session.id)}
-                              onRename={(newTitle) => renameSession(session.id, newTitle)}
                               onPinToggle={() => togglePinSession(session.id)}
                             />
                           ))}
@@ -207,7 +205,6 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
                             navigate(`/chat/${session.id}`)
                           }}
                           onDelete={() => handleDelete(session.id)}
-                          onRename={(newTitle) => renameSession(session.id, newTitle)}
                           onPinToggle={() => togglePinSession(session.id)}
                         />
                       ))}

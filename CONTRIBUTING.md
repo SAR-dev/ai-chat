@@ -69,7 +69,7 @@ src/
     AppLayout.tsx             # Root layout (sidebar + resizable panels)
     ArtifactRenderer.tsx      # Charts, KPI cards, tables (Recharts)
     BrandMark.tsx             # Logo image component
-    ChatHeader.tsx            # Conversation header (title, rename)
+    ChatHeader.tsx            # Conversation header
     ChatInput.tsx             # Message input (textarea, file upload, mode dropdown)
     ChatMessage.tsx           # Single message bubble (rich rendering + actions)
     ChatSidebar.tsx           # Conversation list sidebar
@@ -127,8 +127,7 @@ src/
 ```
 BrowserRouter
   /login          → LoginPage
-  /chat           → ChatPage (home, no session selected)
-  /chat/:sessionId → ChatPage (active session)
+  /chat/:sessionId? → ChatPage (new chat or active session)
   *                → redirect to /chat
 ```
 
@@ -139,7 +138,7 @@ All routes except `/login` are wrapped in `<ProtectedRoute>` which redirects to 
 1. **User input** is submitted via `ChatInput` (textarea, file upload, mode selectors)
 2. `chatStore.sendChatMessage()` or `sendRagMessage()` is called
 3. The store creates optimistic user + assistant messages and calls `apiClient.chatStream()` / `queryStream()`
-4. The SSE parser handles event types: `title_updated`, `agent_tools`, `artifact`, `image`, `image_status`, `slide`, `slide_status`, `sources`, `done`
+4. The SSE parser handles event types: `start`, `title_updated`, `agent_tools`, `artifact`, `image`, `image_status`, `slide`, `slide_status`, `sources`, `done`
 5. Text tokens are buffered with 70ms flush intervals for smooth streaming
 6. Zustand state updates trigger React re-renders in `ChatWindow` → `ChatMessage` → `MarkdownRenderer` / `ArtifactRenderer` / `SlideDeckView`
 
@@ -159,7 +158,7 @@ All routes except `/login` are wrapped in `<ProtectedRoute>` which redirects to 
 - **Slide Deck Generation** — 9-stage pipeline stepper, iframe preview, fullscreen mode, individual slide regeneration, PPTX download
 - **File Upload** — drag-and-drop (react-dropzone), file previews, type/size validation (10MB max)
 - **Agent Tools** — expandable agent activity section showing RAG search, web search, company KB search with reasoning
-- **Conversation Management** — create, rename, delete, pin/unpin, search (Cmd+K)
+- **Conversation Management** — create, delete, pin/unpin, search (Cmd+K)
 - **Message Actions** — copy, edit & resend, regenerate, thumbs up/down feedback, download as DOCX/MD
 - **Bilingual UI** — full English/Japanese localization with automatic language detection
 - **Responsive Design** — desktop (resizable sidebar panels) / mobile (drawer sidebar)
@@ -171,7 +170,6 @@ All routes except `/login` are wrapped in `<ProtectedRoute>` which redirects to 
 - **Path alias:** `@/` maps to `./src/`
 - **Barrel imports** from `@/components/ui/`, `@/stores/`, `@/lib/`, `@/types/`
 - **i18n:** Translation keys use dot-notation hierarchy (`login.title`, `chat.inputPlaceholder`). Use `useTranslation()` hook.
-- **Optimistic updates:** Session creation uses placeholder IDs (`opt-{timestamp}`) replaced server-side on SSE `title_updated` event
 - **Error handling:** try/catch in async actions, toast notifications via sonner, ErrorBoundary for render errors
 - **Prettier:** no semicolons, single quotes, trailing commas, 100 char width
 - **ESLint:** flat config with TypeScript-ESLint, react-hooks, react-refresh plugins
@@ -217,7 +215,7 @@ The app communicates with the backend via `src/lib/apiClient.ts`:
 | GET | `/sessions` | List sessions (paginated) |
 | GET | `/sessions/:id` | Get session + messages |
 | DELETE | `/sessions/:id` | Delete session |
-| PATCH | `/sessions/:id` | Rename or pin session |
+| PATCH | `/sessions/:id` | Pin session |
 | POST | `/sessions/:id/messages/truncate` | Truncate messages |
 | POST | `/messages/:id/feedback` | Submit thumbs up/down feedback |
 | POST | `/slides/:deckId/:slideId/regenerate` | Regenerate a single slide |
@@ -227,4 +225,4 @@ The app communicates with the backend via `src/lib/apiClient.ts`:
 | POST | `/request/cancel/:requestId` | Cancel active request |
 | GET | `/request/active` | List active requests |
 
-Streaming endpoints use Server-Sent Events (SSE) with `event:` and `data:` lines. Event types: `title_updated`, `agent_tools`, `artifact`, `image`, `image_status`, `slide`, `slide_status`, `sources`, `done`.
+Streaming endpoints use Server-Sent Events (SSE) with `event:` and `data:` lines. Event types: `start`, `title_updated`, `agent_tools`, `artifact`, `image`, `image_status`, `slide`, `slide_status`, `sources`, `done`.
