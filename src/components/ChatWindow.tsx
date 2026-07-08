@@ -32,7 +32,7 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
 
   if (messagesStatus === 'loading') {
     return (
-      <div className="flex-1 space-y-6 p-4 sm:p-6">
+      <div className="mx-auto w-full max-w-3xl flex-1 space-y-6 p-4 sm:p-6">
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="border-border space-y-2 border-l-2 pl-4">
             <Skeleton className="h-3 w-20" />
@@ -53,8 +53,8 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
   }
 
   return (
-    <ScrollArea className="flex-1" ref={scrollRef}>
-      <div className="py-4">
+    <ScrollArea className="min-w-0 flex-1" ref={scrollRef}>
+      <div className="mx-auto max-w-3xl py-4">
         {messages.map((msg) => (
           <ChatMessage key={msg.id} message={msg} />
         ))}

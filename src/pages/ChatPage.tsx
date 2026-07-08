@@ -81,7 +81,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-w-0 flex-col">
       <ChatWindow sessionId={sessionId} />
       <ChatInput sessionId={sessionId} />
     </div>

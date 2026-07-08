@@ -5,9 +5,38 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import FilePreview from '@/components/FilePreview'
 import { useChatStore } from '@/stores/chatStore'
-import { PaperPlaneRight, StopCircle, Paperclip } from '@phosphor-icons/react'
+import {
+  PaperPlaneRight,
+  StopCircle,
+  Paperclip,
+  CaretDown,
+  Lightning,
+  Brain,
+  PresentationChart,
+  Palette,
+} from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useDropzone } from 'react-dropzone'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from '@/components/ui/dropdown-menu'
+
+// Demo data -- not wired up to a real backend yet.
+const MODES = [
+  { id: 'fast', name: 'Fast', description: 'Quick, everyday replies', icon: Lightning },
+  { id: 'think', name: 'Think', description: 'Reasons longer for harder problems', icon: Brain },
+] as const
+
+const SLIDE_STYLES = [
+  { id: 'standard', name: 'Standard', description: 'Clean, minimal layouts', icon: PresentationChart },
+  { id: 'creative', name: 'Creative', description: 'Bolder visuals and layout', icon: Palette },
+] as const
 
 interface PendingFile {
   id: string
@@ -53,6 +82,8 @@ export default function ChatInput({ sessionId, variant = 'default', className }:
   const [input, setInput] = useState('')
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
   const [isCreatingSession, setIsCreatingSession] = useState(false)
+  const [mode, setMode] = useState<string>(MODES[0].id)
+  const [slideStyle, setSlideStyle] = useState<string>(SLIDE_STYLES[0].id)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const createSession = useChatStore((s) => s.createSession)
   const sendMessageStreaming = useChatStore((s) => s.sendMessageStreaming)
@@ -146,6 +177,10 @@ export default function ChatInput({ sessionId, variant = 'default', className }:
   const disabled = isStreaming || isLoading || isCreatingSession
   const canSend = !disabled && (input.trim().length > 0 || pendingFiles.length > 0)
   const isHero = variant === 'hero'
+  const activeMode = MODES.find((m) => m.id === mode) ?? MODES[0]
+  const activeSlideStyle = SLIDE_STYLES.find((s) => s.id === slideStyle) ?? SLIDE_STYLES[0]
+  const ActiveModeIcon = activeMode.icon
+  const ActiveSlideIcon = activeSlideStyle.icon
 
   return (
     <div
@@ -181,15 +216,74 @@ export default function ChatInput({ sessionId, variant = 'default', className }:
           />
 
           <div className="flex items-center justify-between px-2 pb-2">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => document.getElementById(inputId)?.click()}
-              disabled={disabled}
-              className="shrink-0"
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
+            <div className="flex min-w-0 items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => document.getElementById(inputId)?.click()}
+                disabled={disabled}
+                className="shrink-0"
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={disabled}
+                      className="text-muted-foreground min-w-0 shrink gap-1 rounded-full px-2"
+                    />
+                  }
+                >
+                  <ActiveModeIcon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{activeMode.name}</span>
+                  <span className="bg-border mx-0.5 h-3 w-px shrink-0" />
+                  <ActiveSlideIcon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{activeSlideStyle.name}</span>
+                  <CaretDown className="h-3 w-3 shrink-0" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-60 p-1">
+                  <DropdownMenuRadioGroup value={mode} onValueChange={setMode}>
+                    <DropdownMenuLabel>Mode</DropdownMenuLabel>
+                    {MODES.map((option) => {
+                      const Icon = option.icon
+                      return (
+                        <DropdownMenuRadioItem key={option.id} value={option.id}>
+                          <Icon className="h-4 w-4" />
+                          <div className="flex flex-col">
+                            <span>{option.name}</span>
+                            <span className="text-muted-foreground text-xs">
+                              {option.description}
+                            </span>
+                          </div>
+                        </DropdownMenuRadioItem>
+                      )
+                    })}
+                  </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup value={slideStyle} onValueChange={setSlideStyle}>
+                    <DropdownMenuLabel>Slide</DropdownMenuLabel>
+                    {SLIDE_STYLES.map((option) => {
+                      const Icon = option.icon
+                      return (
+                        <DropdownMenuRadioItem key={option.id} value={option.id}>
+                          <Icon className="h-4 w-4" />
+                          <div className="flex flex-col">
+                            <span>{option.name}</span>
+                            <span className="text-muted-foreground text-xs">
+                              {option.description}
+                            </span>
+                          </div>
+                        </DropdownMenuRadioItem>
+                      )
+                    })}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <input
               id={inputId}
               type="file"

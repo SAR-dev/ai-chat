@@ -16,8 +16,6 @@ import {
   ThumbsUp,
   ThumbsDown,
   Download,
-  Check,
-  X,
 } from '@phosphor-icons/react'
 import { useChatStore } from '@/stores/chatStore'
 import { toast } from 'sonner'
@@ -74,30 +72,37 @@ export default function ChatMessage({
 
   return (
     <div className={cn('group px-4 py-3 sm:px-6', isUser && 'flex justify-end')}>
-      <div className={cn('max-w-[720px] min-w-0', isUser ? 'w-full max-w-[80%]' : 'w-full')}>
+      <div className={cn('min-w-0', isUser ? 'max-w-[80%]' : 'w-full')}>
         {isEditing ? (
-          <div className="flex flex-col gap-2">
+          <div className="border-border bg-card focus-within:border-primary/60 focus-within:ring-primary/15 flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-all focus-within:ring-4">
             <Textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="min-h-20"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleEdit()
+                }
+                if (e.key === 'Escape') setIsEditing(false)
+              }}
               autoFocus
+              className="max-h-[45vh] min-h-20 resize-none overflow-y-auto border-0 bg-transparent shadow-none ring-0 outline-none focus-visible:ring-0"
             />
-            <div className="flex justify-end gap-1">
-              <Button variant="ghost" size="icon-xs" onClick={() => setIsEditing(false)}>
-                <X className="h-3 w-3" />
+            <div className="flex justify-end gap-1 px-2 pb-2">
+              <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+                {t('sidebar.cancel')}
               </Button>
-              <Button variant="default" size="icon-xs" onClick={handleEdit}>
-                <Check className="h-3 w-3" />
+              <Button variant="default" size="sm" onClick={handleEdit}>
+                {t('common.save')}
               </Button>
             </div>
           </div>
         ) : isUser ? (
-          <div className="bg-secondary text-secondary-foreground rounded-2xl px-4 py-2.5">
+          <div className="bg-secondary text-secondary-foreground min-w-0 rounded-2xl px-4 py-2.5 break-words">
             <MarkdownRenderer content={displayContent} />
           </div>
         ) : (
-          <div>
+          <div className="min-w-0 break-words">
             <MarkdownRenderer content={displayContent} />
             {isStreaming && streamingContent === '' && (
               <span className="bg-primary inline-block h-3.5 w-1.5 animate-pulse rounded-full align-middle" />

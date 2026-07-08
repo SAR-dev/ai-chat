@@ -37,7 +37,7 @@ export default function AppLayout() {
               <ChatSidebar collapsed onToggleCollapsed={toggleSidebarCollapsed} />
             </div>
             <div className="flex h-full min-w-0 flex-1 flex-col">
-              <main className="min-h-0 flex-1">
+              <main className="min-h-0 min-w-0 flex-1">
                 <ErrorBoundary>
                   <Outlet />
                 </ErrorBoundary>
@@ -53,8 +53,8 @@ export default function AppLayout() {
             </ResizablePanel>
             <ResizableHandle withHandle />
             <ResizablePanel defaultSize="80">
-              <div className="flex h-full flex-col">
-                <main className="min-h-0 flex-1">
+              <div className="flex h-full min-w-0 flex-col">
+                <main className="min-h-0 min-w-0 flex-1">
                   <ErrorBoundary>
                     <Outlet />
                   </ErrorBoundary>
@@ -67,7 +67,7 @@ export default function AppLayout() {
 
       {/* Mobile: Content area */}
       <main className="flex flex-1 flex-col md:hidden">
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <Outlet />
         </div>
       </main>

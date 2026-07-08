@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -67,7 +68,7 @@ export default function SidebarItem({
     <>
       <div
         className={cn(
-          'group flex cursor-pointer items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm transition-colors',
+          'group flex h-9 cursor-pointer items-center gap-1 rounded-lg px-2.5 text-sm transition-colors',
           isActive
             ? 'bg-sidebar-accent text-sidebar-accent-foreground'
             : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
@@ -108,20 +109,31 @@ export default function SidebarItem({
           <DialogHeader>
             <DialogTitle>Rename conversation</DialogTitle>
           </DialogHeader>
-          <Input
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleRename()
-              if (e.key === 'Escape') setIsRenameOpen(false)
-            }}
-          />
+          <div className="space-y-3">
+            <p className="text-muted-foreground text-sm">
+              Current name: <span className="text-foreground font-medium">{session.title}</span>
+            </p>
+            <div className="space-y-1.5">
+              <Label htmlFor="rename-conversation-input">New name</Label>
+              <Input
+                id="rename-conversation-input"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleRename()
+                  if (e.key === 'Escape') setIsRenameOpen(false)
+                }}
+              />
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsRenameOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleRename}>Save</Button>
+            <Button onClick={handleRename} disabled={!editTitle.trim()}>
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

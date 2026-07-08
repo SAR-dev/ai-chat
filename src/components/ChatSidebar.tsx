@@ -114,7 +114,13 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
         {collapsed ? (
           <Tooltip>
             <TooltipTrigger
-              render={<Button variant="outline" size="icon" className="rounded-xl border-none" />}
+              render={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 rounded-xl border-none"
+                />
+              }
               onClick={handleNewChat}
             >
               <Plus weight="bold" className="h-4 w-4" />
@@ -125,7 +131,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
           <Button
             variant="outline"
             size="sm"
-            className="w-full justify-start gap-2 rounded-xl border-none bg-transparent shadow-none hover:bg-white/60 dark:hover:bg-white/5"
+            className="h-9 w-full justify-start gap-2 rounded-xl border-none bg-transparent shadow-none hover:bg-white/60 dark:hover:bg-white/5"
             onClick={handleNewChat}
           >
             <Plus weight="bold" className="h-4 w-4" />
@@ -140,7 +146,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-muted-foreground rounded-xl"
+                  className="text-muted-foreground h-9 w-9 rounded-xl"
                 />
               }
               onClick={() => setCommandOpen(true)}
@@ -153,7 +159,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground w-full justify-start gap-2 rounded-xl"
+            className="text-muted-foreground h-9 w-full justify-start gap-2 rounded-xl"
             onClick={() => setCommandOpen(true)}
           >
             <MagnifyingGlass className="h-4 w-4" />
