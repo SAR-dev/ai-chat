@@ -1,71 +1,147 @@
 import { create } from 'zustand'
-import type { ChatSession, ChatMessage } from '@/types'
+import { v4 as uuidv4 } from 'uuid'
+import type {
+  ChatSessionSummary,
+  MessageState,
+  ArtifactData,
+  GeneratedImage,
+  SlideDeck,
+  SourceLink,
+  SlideStageId,
+  SlideStageStatus,
+} from '@/types'
 import * as api from '@/lib/apiClient'
 
 interface ChatState {
-  sessions: ChatSession[]
-  messagesBySessionId: Record<string, ChatMessage[]>
+  sessions: ChatSessionSummary[]
+  messagesBySessionId: Record<string, MessageState[]>
   activeSessionId: string | null
   isStreaming: boolean
+  streamingMessageId: string | null
   sessionsStatus: 'idle' | 'loading' | 'error'
   messagesStatus: 'idle' | 'loading' | 'error'
-  streamingContent: string
+  isEndOfHistory: boolean
 
-  loadSessions: () => Promise<void>
-  createSession: () => Promise<ChatSession>
-  renameSession: (id: string, title: string) => Promise<void>
+  loadSessions: (limit?: number, offset?: number) => Promise<void>
+  loadMoreSessions: () => Promise<void>
+  createSession: () => Promise<ChatSessionSummary>
   deleteSession: (id: string) => Promise<void>
   setActiveSession: (id: string | null) => void
   loadMessages: (sessionId: string) => Promise<void>
-  sendMessage: (sessionId: string, content: string) => Promise<void>
-  sendMessageStreaming: (sessionId: string, content: string) => Promise<void>
-  stopStreaming: () => void
-  regenerateMessage: (messageId: string) => Promise<void>
-  submitFeedback: (
-    messageId: string,
-    rating: 'helpful' | 'not_helpful',
-    comment?: string,
+
+  sendChatMessage: (
+    sessionId: string,
+    message: string,
+    opts?: {
+      mode?: 'fast' | 'thinking'
+      internet_search?: boolean
+      slide_mode?: 'standard' | 'creative'
+      agent_mode?: boolean
+      file?: File
+    },
   ) => Promise<void>
+
+  sendRagMessage: (
+    sessionId: string,
+    query: string,
+    category: string,
+    opts?: {
+      top_k?: string
+      show_context?: boolean
+      mode?: 'fast' | 'thinking'
+      internet_search?: boolean
+      agent_mode?: boolean
+    },
+  ) => Promise<void>
+
+  stopStreaming: () => void
+  regenerateMessage: (sessionId: string, messageId: number) => Promise<void>
+  editAndResend: (sessionId: string, fromMessageId: number, newContent: string) => Promise<void>
+  submitFeedback: (messageId: number, isHelpful: boolean | null) => Promise<void>
 }
 
 let abortController: AbortController | null = null
+let currentRequestId: string | null = null
+
+function createMessageState(role: 'user' | 'assistant', content = ''): MessageState {
+  return {
+    type: role === 'user' ? 'right' : 'left',
+    content,
+    cancelled: false,
+    agentTools: [],
+    agentReasoning: '',
+    imageStatus: '',
+    images: [],
+    slideStatus: '',
+    slideStages: {},
+    slides: [],
+    sources: [],
+    artifacts: [],
+    isRagMessage: false,
+    assistantMessageId: null,
+    uuid: uuidv4(),
+    file: null,
+    dbId: null,
+  }
+}
 
 export const useChatStore = create<ChatState>()((set, get) => ({
   sessions: [],
   messagesBySessionId: {},
   activeSessionId: null,
   isStreaming: false,
+  streamingMessageId: null,
   sessionsStatus: 'idle',
   messagesStatus: 'idle',
-  streamingContent: '',
+  isEndOfHistory: false,
 
-  loadSessions: async () => {
+  loadSessions: async (limit = 50, offset = 0) => {
     set({ sessionsStatus: 'loading' })
     try {
-      const sessions = await api.fetchSessions()
-      set({ sessions, sessionsStatus: 'idle' })
+      const result = await api.fetchSessions(limit, offset)
+      set({
+        sessions: result.sessions,
+        sessionsStatus: 'idle',
+        isEndOfHistory: result.count <= offset + limit,
+      })
     } catch {
       set({ sessionsStatus: 'error' })
     }
   },
 
-  createSession: async () => {
-    const session = await api.createSession()
-    set((state) => ({ sessions: [session, ...state.sessions] }))
-    return session
+  loadMoreSessions: async () => {
+    const state = get()
+    if (state.isEndOfHistory || state.sessionsStatus === 'loading') return
+    const offset = state.sessions.length
+    try {
+      const result = await api.fetchSessions(50, offset)
+      set((s) => ({
+        sessions: [...s.sessions, ...result.sessions],
+        isEndOfHistory: result.count <= offset + result.sessions.length,
+      }))
+    } catch {
+      // ignore
+    }
   },
 
-  renameSession: async (id: string, title: string) => {
-    const updated = await api.renameSession(id, title)
-    set((state) => ({
-      sessions: state.sessions.map((s) => (s.id === id ? updated : s)),
-    }))
+  createSession: async () => {
+    // Optimistic: we need a session ID before we can navigate. The chat/stream endpoint
+    // creates one server-side if none is provided. For the sidebar, we'll create a placeholder.
+    const placeholder: ChatSessionSummary = {
+      id: `opt-${Date.now()}`,
+      title: 'New Chat',
+    }
+    set((state) => ({ sessions: [placeholder, ...state.sessions] }))
+    return placeholder
   },
 
   deleteSession: async (id: string) => {
-    await api.deleteSessionApi(id)
+    try {
+      await api.deleteSessionApi(id)
+    } catch {
+      // ignore
+    }
     set((state) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [id]: _, ...rest } = state.messagesBySessionId
       return {
         sessions: state.sessions.filter((s) => s.id !== id),
@@ -82,7 +158,27 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   loadMessages: async (sessionId: string) => {
     set({ messagesStatus: 'loading' })
     try {
-      const messages = await api.fetchMessages(sessionId)
+      const result = await api.fetchSession(sessionId)
+      const messages: MessageState[] = result.messages.map((msg) => ({
+        type: msg.role === 'user' ? 'right' : 'left',
+        content: msg.content,
+        cancelled: false,
+        agentTools: [],
+        agentReasoning: '',
+        imageStatus: '',
+        images: [],
+        slideStatus: '',
+        slideStages: {},
+        slides: [],
+        sources: msg.sources ?? [],
+        artifacts: msg.artifacts ?? [],
+        isRagMessage: result.session.category !== 'normalChat',
+        assistantMessageId: msg.id,
+        uuid: uuidv4(),
+        file: null,
+        dbId: msg.id,
+      }))
+
       set((state) => ({
         messagesBySessionId: { ...state.messagesBySessionId, [sessionId]: messages },
         messagesStatus: 'idle',
@@ -92,107 +188,291 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     }
   },
 
-  sendMessage: async (sessionId: string, content: string) => {
-    const userMessage: ChatMessage = {
-      id: `local-${Date.now()}-user`,
-      sessionId,
-      role: 'user',
-      content,
-      timestamp: new Date().toISOString(),
-    }
+  sendChatMessage: async (sessionId, message, opts) => {
+    const state = get()
+    const userMsg = createMessageState('user', message)
+    const assistantMsg = createMessageState('assistant')
+    assistantMsg.uuid = uuidv4()
 
-    set((state) => ({
+    const existing = state.messagesBySessionId[sessionId] ?? []
+
+    set({
       messagesBySessionId: {
         ...state.messagesBySessionId,
-        [sessionId]: [...(state.messagesBySessionId[sessionId] ?? []), userMessage],
-      },
-    }))
-
-    try {
-      const assistantMessage = await api.sendMessage(sessionId, { content })
-      set((state) => ({
-        messagesBySessionId: {
-          ...state.messagesBySessionId,
-          [sessionId]: [...(state.messagesBySessionId[sessionId] ?? []), assistantMessage],
-        },
-      }))
-    } catch {
-      const errorMessage: ChatMessage = {
-        id: `error-${Date.now()}`,
-        sessionId,
-        role: 'assistant',
-        content: 'Failed to send message. Please try again.',
-        timestamp: new Date().toISOString(),
-      }
-      set((state) => ({
-        messagesBySessionId: {
-          ...state.messagesBySessionId,
-          [sessionId]: [...(state.messagesBySessionId[sessionId] ?? []), errorMessage],
-        },
-      }))
-    }
-  },
-
-  sendMessageStreaming: async (sessionId: string, content: string) => {
-    const userMessage: ChatMessage = {
-      id: `local-${Date.now()}-user`,
-      sessionId,
-      role: 'user',
-      content,
-      timestamp: new Date().toISOString(),
-    }
-
-    set((state) => ({
-      messagesBySessionId: {
-        ...state.messagesBySessionId,
-        [sessionId]: [...(state.messagesBySessionId[sessionId] ?? []), userMessage],
+        [sessionId]: [...existing, userMsg, assistantMsg],
       },
       isStreaming: true,
-      streamingContent: '',
-    }))
+      streamingMessageId: assistantMsg.uuid,
+    })
 
     abortController = new AbortController()
 
     try {
-      const assistantMessage = await api.sendMessageStream(
-        sessionId,
-        { content },
-        (chunk) => {
-          set((state) => ({
-            streamingContent: state.streamingContent + chunk,
-          }))
+      await api.chatStream(
+        {
+          message,
+          session_id: sessionId,
+          mode: opts?.mode,
+          internet_search: opts?.internet_search,
+          slide_mode: opts?.slide_mode,
+          agent_mode: opts?.agent_mode,
+        },
+        {
+          onToken: (token) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) =>
+                m.uuid === s.streamingMessageId
+                  ? { ...m, content: m.content + token }
+                  : m,
+              )
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+              }
+            })
+          },
+          onTitleUpdated: (data) => {
+            set((s) => {
+              const existingSession = s.sessions.find((sess) => sess.id === data.session_id)
+              if (existingSession) {
+                return {
+                  sessions: s.sessions.map((sess) =>
+                    sess.id === data.session_id ? { ...sess, title: data.session_title } : sess,
+                  ),
+                }
+              }
+              return {
+                sessions: [{ id: data.session_id, title: data.session_title }, ...s.sessions],
+              }
+            })
+          },
+          onAgentTools: (data) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) =>
+                m.uuid === s.streamingMessageId
+                  ? { ...m, agentTools: data.tools, agentReasoning: data.reasoning ?? '' }
+                  : m,
+              )
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+              }
+            })
+          },
+          onArtifact: (artifact) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) =>
+                m.uuid === s.streamingMessageId
+                  ? { ...m, artifacts: [...m.artifacts, artifact as unknown as ArtifactData] }
+                  : m,
+              )
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+              }
+            })
+          },
+          onImage: (image) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) =>
+                m.uuid === s.streamingMessageId
+                  ? { ...m, images: [...m.images, image as GeneratedImage], imageStatus: '' }
+                  : m,
+              )
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+              }
+            })
+          },
+          onImageStatus: (message) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) =>
+                m.uuid === s.streamingMessageId
+                  ? { ...m, imageStatus: message }
+                  : m,
+              )
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+              }
+            })
+          },
+          onSlide: (slide) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) =>
+                m.uuid === s.streamingMessageId
+                  ? { ...m, slides: [...m.slides, slide as unknown as SlideDeck], slideStatus: '', slideStages: {} }
+                  : m,
+              )
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+              }
+            })
+          },
+          onSlideStatus: (data) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) => {
+                if (m.uuid !== s.streamingMessageId) return m
+                const stages = { ...m.slideStages }
+                stages[data.stage] = {
+                  stage: data.stage as SlideStageId,
+                  stage_status: data.stage_status as SlideStageStatus,
+                  message: data.message,
+                }
+                return { ...m, slideStages: stages, slideStatus: '' }
+              })
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+              }
+            })
+          },
+          onSources: (sources) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) =>
+                m.uuid === s.streamingMessageId
+                  ? { ...m, sources: sources as SourceLink[] }
+                  : m,
+              )
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+              }
+            })
+          },
+          onDone: (assistantMessageId) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) =>
+                m.uuid === s.streamingMessageId
+                  ? { ...m, assistantMessageId: assistantMessageId ?? null }
+                  : m,
+              )
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+                isStreaming: false,
+                streamingMessageId: null,
+              }
+            })
+          },
         },
         abortController.signal,
       )
-
-      set((state) => ({
-        messagesBySessionId: {
-          ...state.messagesBySessionId,
-          [sessionId]: [...(state.messagesBySessionId[sessionId] ?? []), assistantMessage],
-        },
-        isStreaming: false,
-        streamingContent: '',
-      }))
     } catch (e) {
       if ((e as Error).name === 'AbortError') {
-        const partialContent = get().streamingContent
-        if (partialContent) {
-          const partialMessage: ChatMessage = {
-            id: `msg-${Date.now()}-partial`,
-            sessionId,
-            role: 'assistant',
-            content: partialContent,
-            timestamp: new Date().toISOString(),
+        // Mark the message as cancelled
+        set((s) => {
+          const msgs = s.messagesBySessionId[sessionId] ?? []
+          const updated = msgs.map((m) =>
+            m.uuid === s.streamingMessageId ? { ...m, cancelled: true } : m,
+          )
+          return {
+            messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+            isStreaming: false,
+            streamingMessageId: null,
           }
-          set((state) => ({
-            messagesBySessionId: {
-              ...state.messagesBySessionId,
-              [sessionId]: [...(state.messagesBySessionId[sessionId] ?? []), partialMessage],
-            },
-          }))
-        }
+        })
+      } else {
+        set({ isStreaming: false, streamingMessageId: null })
       }
-      set({ isStreaming: false, streamingContent: '' })
+    }
+  },
+
+  sendRagMessage: async (sessionId, query, category, opts) => {
+    const state = get()
+    const userMsg = createMessageState('user', query)
+    const assistantMsg = createMessageState('assistant')
+    assistantMsg.isRagMessage = true
+    assistantMsg.uuid = uuidv4()
+
+    const existing = state.messagesBySessionId[sessionId] ?? []
+
+    set({
+      messagesBySessionId: {
+        ...state.messagesBySessionId,
+        [sessionId]: [...existing, userMsg, assistantMsg],
+      },
+      isStreaming: true,
+      streamingMessageId: assistantMsg.uuid,
+    })
+
+    abortController = new AbortController()
+
+    try {
+      await api.queryStream(
+        {
+          query,
+          category,
+          session_id: sessionId,
+          top_k: opts?.top_k ?? '5',
+          show_context: opts?.show_context,
+          mode: opts?.mode,
+          internet_search: opts?.internet_search,
+          agent_mode: opts?.agent_mode,
+        },
+        {
+          onToken: (token) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) =>
+                m.uuid === s.streamingMessageId
+                  ? { ...m, content: m.content + token }
+                  : m,
+              )
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+              }
+            })
+          },
+          onSources: (sources) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) =>
+                m.uuid === s.streamingMessageId
+                  ? { ...m, sources: sources as SourceLink[] }
+                  : m,
+              )
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+              }
+            })
+          },
+          onDone: (assistantMessageId) => {
+            set((s) => {
+              const msgs = s.messagesBySessionId[sessionId] ?? []
+              const updated = msgs.map((m) =>
+                m.uuid === s.streamingMessageId
+                  ? { ...m, assistantMessageId: assistantMessageId ?? null }
+                  : m,
+              )
+              return {
+                messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+                isStreaming: false,
+                streamingMessageId: null,
+              }
+            })
+          },
+        },
+        abortController.signal,
+      )
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') {
+        set((s) => {
+          const msgs = s.messagesBySessionId[sessionId] ?? []
+          const updated = msgs.map((m) =>
+            m.uuid === s.streamingMessageId ? { ...m, cancelled: true } : m,
+          )
+          return {
+            messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
+            isStreaming: false,
+            streamingMessageId: null,
+          }
+        })
+      } else {
+        set({ isStreaming: false, streamingMessageId: null })
+      }
     }
   },
 
@@ -201,32 +481,54 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       abortController.abort()
       abortController = null
     }
-  },
-
-  regenerateMessage: async (messageId: string) => {
-    try {
-      const newMessage = await api.regenerateMessage(messageId)
-      set((state) => {
-        const sessionMessages = state.messagesBySessionId[newMessage.sessionId] ?? []
-        return {
-          messagesBySessionId: {
-            ...state.messagesBySessionId,
-            [newMessage.sessionId]: [...sessionMessages, newMessage],
-          },
-        }
-      })
-    } catch {
-      // ignore
+    if (currentRequestId) {
+      api.cancelRequest(currentRequestId).catch(() => {})
+      currentRequestId = null
     }
   },
 
-  submitFeedback: async (
-    messageId: string,
-    rating: 'helpful' | 'not_helpful',
-    comment?: string,
-  ) => {
+  regenerateMessage: async (sessionId: string, _messageId: number) => {
+    // Re-send the same query to the stream endpoint to get a new response
+    const state = get()
+    const msgs = state.messagesBySessionId[sessionId] ?? []
+    // Find the user message that precedes the assistant message being regenerated
+    const lastUserMsg = [...msgs].reverse().find((m) => m.type === 'right')
+    // Remove the last assistant message
+    const trimmed = msgs.slice(0, -1)
+    set({
+      messagesBySessionId: { ...state.messagesBySessionId, [sessionId]: trimmed },
+    })
+    if (lastUserMsg) {
+      await get().sendChatMessage(sessionId, lastUserMsg.content)
+    }
+  },
+
+  editAndResend: async (sessionId, fromMessageId, newContent) => {
+    // Truncate messages on server
     try {
-      await api.submitFeedback(messageId, { rating, comment })
+      await api.truncateMessages(sessionId, { from_message_id: fromMessageId })
+    } catch {
+      // ignore
+    }
+
+    // Truncate locally
+    const state = get()
+    const msgs = state.messagesBySessionId[sessionId] ?? []
+    const truncateIndex = msgs.findIndex((m) => m.dbId === fromMessageId)
+    if (truncateIndex >= 0) {
+      const trimmed = msgs.slice(0, truncateIndex)
+      set({
+        messagesBySessionId: { ...state.messagesBySessionId, [sessionId]: trimmed },
+      })
+    }
+
+    // Send the new message
+    await get().sendChatMessage(sessionId, newContent)
+  },
+
+  submitFeedback: async (messageId, isHelpful) => {
+    try {
+      await api.submitFeedback(messageId, { is_helpful: isHelpful })
     } catch {
       // ignore
     }

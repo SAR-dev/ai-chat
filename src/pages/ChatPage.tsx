@@ -30,7 +30,7 @@ export default function ChatPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const createSession = useChatStore((s) => s.createSession)
-  const sendMessageStreaming = useChatStore((s) => s.sendMessageStreaming)
+  const sendChatMessage = useChatStore((s) => s.sendChatMessage)
   const [isStarting, setIsStarting] = useState(false)
 
   const handleSuggestion = useCallback(
@@ -40,12 +40,12 @@ export default function ChatPage() {
       try {
         const session = await createSession()
         navigate(`/chat/${session.id}`)
-        await sendMessageStreaming(session.id, prompt)
+        await sendChatMessage(session.id, prompt)
       } finally {
         setIsStarting(false)
       }
     },
-    [createSession, navigate, sendMessageStreaming, isStarting],
+    [createSession, navigate, sendChatMessage, isStarting],
   )
 
   if (!sessionId) {

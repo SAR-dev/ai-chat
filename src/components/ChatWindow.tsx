@@ -18,7 +18,13 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
   const messages = useChatStore((s) => s.messagesBySessionId[sessionId]) ?? []
   const messagesStatus = useChatStore((s) => s.messagesStatus)
   const isStreaming = useChatStore((s) => s.isStreaming)
-  const streamingContent = useChatStore((s) => s.streamingContent)
+  const streamingContent = useChatStore((s) => {
+    // Get content from the active streaming message
+    const msgs = s.messagesBySessionId[sessionId] ?? []
+    const streamingMsg = msgs.find((m) => m.uuid === s.streamingMessageId)
+    return streamingMsg?.content ?? ''
+  })
+  const streamingMessageId = useChatStore((s) => s.streamingMessageId)
   const loadMessages = useChatStore((s) => s.loadMessages)
 
   useEffect(() => {
@@ -58,21 +64,14 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
     <ScrollArea className="min-h-0 min-w-0 flex-1" ref={scrollRef}>
       <div className="mx-auto max-w-3xl py-4">
         {messages.map((msg) => (
-          <ChatMessage key={msg.id} message={msg} />
-        ))}
-        {isStreaming && (
           <ChatMessage
-            message={{
-              id: 'streaming',
-              sessionId,
-              role: 'assistant',
-              content: '',
-              timestamp: new Date().toISOString(),
-            }}
-            isStreaming
-            streamingContent={streamingContent}
+            key={msg.uuid}
+            message={msg}
+            sessionId={sessionId}
+            isStreaming={msg.uuid === streamingMessageId}
+            streamingContent={msg.uuid === streamingMessageId ? streamingContent : undefined}
           />
-        )}
+        ))}
         {isStreaming && streamingContent === '' && <TypingIndicator />}
       </div>
     </ScrollArea>

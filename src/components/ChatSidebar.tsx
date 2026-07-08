@@ -35,7 +35,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
   const [commandOpen, setCommandOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  const { sessions, sessionsStatus, loadSessions, createSession, renameSession, deleteSession } =
+  const { sessions, sessionsStatus, loadSessions, createSession, deleteSession } =
     useChatStore()
   const { user } = useAuthStore()
 
@@ -58,13 +58,6 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
     const session = await createSession()
     navigate(`/chat/${session.id}`)
   }, [createSession, navigate])
-
-  const handleRename = useCallback(
-    async (id: string, title: string) => {
-      await renameSession(id, title)
-    },
-    [renameSession],
-  )
 
   const handleDelete = useCallback(
     async (id: string) => {
@@ -197,7 +190,6 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
                   session={session}
                   isActive={session.id === activeId}
                   onSelect={() => navigate(`/chat/${session.id}`)}
-                  onRename={(title) => handleRename(session.id, title)}
                   onDelete={() => handleDelete(session.id)}
                 />
               ))}
@@ -222,22 +214,22 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
               >
                 <Avatar size="sm">
                   <AvatarFallback className="bg-accent text-accent-foreground font-mono">
-                    {user.name.charAt(0).toUpperCase()}
+                    {(user.display_name ?? user.username).charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </TooltipTrigger>
-              <TooltipContent side="right">{user.name}</TooltipContent>
+              <TooltipContent side="right">{user.display_name ?? user.username}</TooltipContent>
             </Tooltip>
           ) : (
             <div className="flex items-center gap-3 px-2 py-1.5">
               <Avatar size="sm">
                 <AvatarFallback className="bg-accent text-accent-foreground font-mono">
-                  {user.name.charAt(0).toUpperCase()}
+                  {(user.display_name ?? user.username).charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-1 flex-col">
-                <span className="text-sidebar-foreground text-sm font-medium">{user.name}</span>
-                <span className="text-sidebar-foreground/50 text-xs">{user.employeeId}</span>
+                <span className="text-sidebar-foreground text-sm font-medium">{user.display_name ?? user.username}</span>
+                <span className="text-sidebar-foreground/50 text-xs">@{user.username}</span>
               </div>
               <Button
                 variant="ghost"

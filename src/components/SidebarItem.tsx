@@ -23,13 +23,13 @@ import {
 } from '@/components/ui/alert-dialog'
 import { PencilSimple, Trash } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
-import type { ChatSession } from '@/types'
+import type { ChatSessionSummary } from '@/types'
 
 interface SidebarItemProps {
-  session: ChatSession
+  session: ChatSessionSummary
   isActive: boolean
   onSelect: () => void
-  onRename: (title: string) => Promise<void>
+  onRename?: (title: string) => Promise<void>
   onDelete: () => Promise<void>
 }
 
@@ -46,7 +46,7 @@ export default function SidebarItem({
   const [editTitle, setEditTitle] = useState(session.title)
 
   const handleRename = async () => {
-    if (editTitle.trim() && editTitle !== session.title) {
+    if (editTitle.trim() && editTitle !== session.title && onRename) {
       await onRename(editTitle.trim())
     }
     setIsRenameOpen(false)
@@ -77,9 +77,11 @@ export default function SidebarItem({
       >
         <span className="flex-1 truncate">{session.title}</span>
         <div className="invisible flex items-center gap-0.5 group-hover:visible">
-          <Button variant="ghost" size="icon-sm" onClick={openRenameDialog}>
-            <PencilSimple className="h-3 w-3" />
-          </Button>
+          {onRename && (
+            <Button variant="ghost" size="icon-sm" onClick={openRenameDialog}>
+              <PencilSimple className="h-3 w-3" />
+            </Button>
+          )}
           <AlertDialog>
             <AlertDialogTrigger
               render={
@@ -110,7 +112,7 @@ export default function SidebarItem({
         </div>
       </div>
 
-      <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
+      {onRename && <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Rename conversation</DialogTitle>
@@ -142,7 +144,7 @@ export default function SidebarItem({
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog>}
     </>
   )
 }

@@ -3,11 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
-import ArtifactCard from '@/components/ArtifactCard'
-import type { ChatMessage as ChatMessageType } from '@/types'
+import type { MessageState } from '@/types'
 import { cn } from '@/lib/utils'
 import {
   Copy,
@@ -21,28 +18,26 @@ import { useChatStore } from '@/stores/chatStore'
 import { toast } from 'sonner'
 
 interface ChatMessageProps {
-  message: ChatMessageType
+  message: MessageState
+  sessionId: string
   isStreaming?: boolean
   streamingContent?: string
-  onOpenArtifact?: (artifactId: string) => void
 }
 
 export default function ChatMessage({
   message,
+  sessionId,
   isStreaming,
   streamingContent,
-  onOpenArtifact,
 }: ChatMessageProps) {
   const { t } = useTranslation()
-  const isUser = message.role === 'user'
+  const isUser = message.type === 'right'
   const displayContent = isStreaming ? (streamingContent ?? '') : message.content
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(message.content)
-  const [feedbackRating, setFeedbackRating] = useState<string | null>(
-    message.feedback?.rating ?? null,
-  )
-  const sendMessage = useChatStore((s) => s.sendMessage)
+  const editAndResend = useChatStore((s) => s.editAndResend)
   const regenerateMessage = useChatStore((s) => s.regenerateMessage)
+  const submitFeedback = useChatStore((s) => s.submitFeedback)
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content)
@@ -50,14 +45,16 @@ export default function ChatMessage({
   }
 
   const handleEdit = async () => {
-    if (editContent.trim() && editContent !== message.content) {
-      await sendMessage(message.sessionId, editContent)
+    if (editContent.trim() && editContent !== message.content && message.dbId) {
+      await editAndResend(sessionId, message.dbId, editContent)
     }
     setIsEditing(false)
   }
 
   const handleRegenerate = async () => {
-    await regenerateMessage(message.id)
+    if (message.assistantMessageId) {
+      await regenerateMessage(sessionId, message.assistantMessageId)
+    }
   }
 
   const handleDownload = () => {
@@ -65,14 +62,70 @@ export default function ChatMessage({
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `message-${message.id.slice(0, 8)}.md`
+    a.download = `message-${message.uuid.slice(0, 8)}.md`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const handleFeedback = (isHelpful: boolean) => {
+    const newValue = message.is_helpful === isHelpful ? null : isHelpful
+    if (message.assistantMessageId) {
+      submitFeedback(message.assistantMessageId, newValue)
+    }
   }
 
   return (
     <div className={cn('group px-4 py-3 sm:px-6', isUser && 'flex justify-end')}>
       <div className={cn('min-w-0', isUser ? 'max-w-[80%]' : 'w-full')}>
+        {message.cancelled && (
+          <div className="text-muted-foreground mb-2 text-xs italic">
+            Request cancelled
+          </div>
+        )}
+
+        {message.agentTools.length > 0 && (
+          <div className="border-border bg-accent/30 mb-3 rounded-xl border p-3">
+            <details className="text-sm">
+              <summary className="cursor-pointer font-medium">
+                Agent activity ({message.agentTools.length} tools)
+              </summary>
+              <div className="mt-2 space-y-1">
+                {message.agentTools.map((tool) => (
+                  <span key={tool} className="bg-accent text-accent-foreground mr-1 inline-block rounded px-1.5 py-0.5 text-xs">
+                    {tool === 'rag_search' && '🔍 RAG Search'}
+                    {tool === 'web_search' && '🌐 Web Search'}
+                    {tool === 'company_kb_search' && '📚 Company KB Search'}
+                    {tool !== 'rag_search' && tool !== 'web_search' && tool !== 'company_kb_search' && `🧰 Tool: ${tool}`}
+                  </span>
+                ))}
+                {message.agentReasoning && (
+                  <p className="text-muted-foreground mt-1 text-xs">{message.agentReasoning}</p>
+                )}
+              </div>
+            </details>
+          </div>
+        )}
+
+        {message.imageStatus && (
+          <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="bg-primary h-3 w-3 animate-pulse rounded-full" />
+            {message.imageStatus}
+          </div>
+        )}
+
+        {message.images.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {message.images.map((img, i) => (
+              <img
+                key={i}
+                src={img.b64}
+                alt={img.caption ?? ''}
+                className="max-h-48 rounded-xl object-contain shadow-sm"
+              />
+            ))}
+          </div>
+        )}
+
         {isEditing ? (
           <div className="border-border bg-card focus-within:border-primary/60 focus-within:ring-primary/15 flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-all focus-within:ring-4">
             <Textarea
@@ -107,17 +160,41 @@ export default function ChatMessage({
             {isStreaming && streamingContent === '' && (
               <span className="bg-primary inline-block h-3.5 w-1.5 animate-pulse rounded-full align-middle" />
             )}
-            {message.artifacts?.map((artifact) => (
-              <ArtifactCard
-                key={artifact.id}
-                artifact={artifact}
-                onOpenArtifact={() => onOpenArtifact?.(artifact.id)}
-              />
-            ))}
+
+            {message.sources.length > 0 && (
+              <div className="mt-3 space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">Sources:</p>
+                <ol className="list-inside list-decimal space-y-0.5 text-xs">
+                  {message.sources.map((source) => (
+                    <li key={source.index}>
+                      <a
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        {source.title}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {message.artifacts.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {message.artifacts.map((artifact, i) => (
+                  <div key={i} className="border-border bg-card rounded-xl border p-3">
+                    <p className="text-sm font-medium">{artifact.title ?? String(artifact.type)}</p>
+                    <p className="text-muted-foreground text-xs">Artifact: {artifact.type}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {!isStreaming && !isEditing && (
+        {!isStreaming && !isEditing && !message.cancelled && (
           <div
             className={cn(
               'mt-1.5 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
@@ -149,7 +226,7 @@ export default function ChatMessage({
               </Tooltip>
             )}
 
-            {!isUser && (
+            {!isUser && message.assistantMessageId && (
               <Tooltip>
                 <TooltipTrigger
                   render={<Button variant="ghost" size="icon-xs" />}
@@ -161,38 +238,34 @@ export default function ChatMessage({
               </Tooltip>
             )}
 
-            <Popover>
-              <PopoverTrigger render={<Button variant="ghost" size="icon-xs" />}>
-                {feedbackRating === 'helpful' ? (
-                  <ThumbsUp className="text-primary h-3 w-3" weight="fill" />
-                ) : feedbackRating === 'not_helpful' ? (
-                  <ThumbsDown className="text-destructive h-3 w-3" weight="fill" />
-                ) : (
-                  <ThumbsUp className="h-3 w-3" />
-                )}
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-2">
-                <ToggleGroup
-                  value={feedbackRating ? [feedbackRating] : []}
-                  onValueChange={(value) => {
-                    const newRating = value[value.length - 1] ?? null
-                    setFeedbackRating(newRating)
-                    if (newRating) {
-                      useChatStore
-                        .getState()
-                        .submitFeedback(message.id, newRating as 'helpful' | 'not_helpful')
-                    }
-                  }}
-                >
-                  <ToggleGroupItem value="helpful" aria-label="Helpful">
-                    <ThumbsUp className="h-4 w-4" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="not_helpful" aria-label="Not helpful">
-                    <ThumbsDown className="h-4 w-4" />
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </PopoverContent>
-            </Popover>
+            {message.isRagMessage && message.assistantMessageId && (
+              <>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={<Button variant="ghost" size="icon-xs" />}
+                    onClick={() => handleFeedback(true)}
+                  >
+                    <ThumbsUp
+                      className={cn('h-3 w-3', message.is_helpful === true && 'text-primary')}
+                      weight={message.is_helpful === true ? 'fill' : 'regular'}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>{t('chat.feedbackHelpful')}</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={<Button variant="ghost" size="icon-xs" />}
+                    onClick={() => handleFeedback(false)}
+                  >
+                    <ThumbsDown
+                      className={cn('h-3 w-3', message.is_helpful === false && 'text-destructive')}
+                      weight={message.is_helpful === false ? 'fill' : 'regular'}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>{t('chat.feedbackNotHelpful')}</TooltipContent>
+                </Tooltip>
+              </>
+            )}
 
             <Tooltip>
               <TooltipTrigger

@@ -27,10 +27,9 @@ import {
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu'
 
-// Demo data -- not wired up to a real backend yet.
 const MODES = [
   { id: 'fast', name: 'Fast', description: 'Quick, everyday replies', icon: Lightning },
-  { id: 'think', name: 'Think', description: 'Reasons longer for harder problems', icon: Brain },
+  { id: 'thinking', name: 'Think', description: 'Reasons longer for harder problems', icon: Brain },
 ] as const
 
 const SLIDE_STYLES = [
@@ -46,15 +45,13 @@ interface PendingFile {
 }
 
 interface ChatInputProps {
-  /** Existing session to send into. Omit to have the composer create a new
-   * session on first send -- this is how the home/hero composer works. */
   sessionId?: string
-  /** Renders a larger, centered composer for the "new chat" home screen. */
   variant?: 'default' | 'hero'
   className?: string
+  category?: string
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024
 const ALLOWED_TYPES = [
   'image/png',
   'image/jpeg',
@@ -68,13 +65,10 @@ const ALLOWED_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]
 
-// Roughly two lines of text-sm content plus the textarea's own padding --
-// this is the composer's resting height, so it never opens looking like a
-// cramped single-line search box.
 const MIN_TEXTAREA_HEIGHT = 56
 const MAX_TEXTAREA_HEIGHT = 200
 
-export default function ChatInput({ sessionId, variant = 'default', className }: ChatInputProps) {
+export default function ChatInput({ sessionId, variant = 'default', className, category }: ChatInputProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const rawId = useId()
@@ -86,7 +80,8 @@ export default function ChatInput({ sessionId, variant = 'default', className }:
   const [slideStyle, setSlideStyle] = useState<string>(SLIDE_STYLES[0].id)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const createSession = useChatStore((s) => s.createSession)
-  const sendMessageStreaming = useChatStore((s) => s.sendMessageStreaming)
+  const sendChatMessage = useChatStore((s) => s.sendChatMessage)
+  const sendRagMessage = useChatStore((s) => s.sendRagMessage)
   const stopStreaming = useChatStore((s) => s.stopStreaming)
   const isStreaming = useChatStore((s) => s.isStreaming)
   const isLoading = useChatStore((s) => s.messagesStatus === 'loading')
@@ -140,6 +135,7 @@ export default function ChatInput({ sessionId, variant = 'default', className }:
       textareaRef.current.style.height = `${MIN_TEXTAREA_HEIGHT}px`
     }
 
+    // If no sessionId, create one first
     let targetSessionId = sessionId
     if (!targetSessionId) {
       setIsCreatingSession(true)
@@ -152,8 +148,20 @@ export default function ChatInput({ sessionId, variant = 'default', className }:
       }
     }
 
-    await sendMessageStreaming(targetSessionId, content)
-  }, [input, pendingFiles, sessionId, createSession, navigate, sendMessageStreaming])
+    const modeVal = mode as 'fast' | 'thinking'
+
+    if (category && category !== 'normalChat') {
+      await sendRagMessage(targetSessionId, content, category, {
+        mode: modeVal,
+        top_k: '5',
+      })
+    } else {
+      await sendChatMessage(targetSessionId, content, {
+        mode: modeVal,
+        slide_mode: slideStyle as 'standard' | 'creative',
+      })
+    }
+  }, [input, pendingFiles, sessionId, createSession, navigate, sendChatMessage, sendRagMessage, mode, slideStyle, category])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

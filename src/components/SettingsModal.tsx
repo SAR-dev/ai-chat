@@ -84,11 +84,11 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
         {user && (
           <div className="flex items-center gap-3 border-b pb-4">
             <Avatar>
-              <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+              <AvatarFallback>{(user.display_name ?? user.username).charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">{user.name}</span>
-              <span className="text-muted-foreground text-xs">{user.employeeId}</span>
+              <span className="text-sm font-medium">{user.display_name ?? user.username}</span>
+              <span className="text-muted-foreground text-xs">@{user.username}</span>
             </div>
           </div>
         )}

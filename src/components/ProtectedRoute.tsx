@@ -1,21 +1,14 @@
-import { useEffect } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 
 export default function ProtectedRoute() {
-  const { user, status, restoreSession, token } = useAuthStore()
-
-  useEffect(() => {
-    if (token && !user && status === 'idle') {
-      restoreSession()
-    }
-  }, [token, user, status, restoreSession])
+  const { user, token } = useAuthStore()
 
   if (!token) {
     return <Navigate to="/login" replace />
   }
 
-  if (status === 'loading' || (!user && token)) {
+  if (!user) {
     return (
       <div className="flex h-svh items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
