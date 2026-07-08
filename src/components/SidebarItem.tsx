@@ -67,7 +67,7 @@ export default function SidebarItem({
     <>
       <div
         className={cn(
-          'group flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 text-sm transition-colors',
+          'group flex cursor-pointer items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm transition-colors',
           isActive
             ? 'bg-sidebar-accent text-sidebar-accent-foreground'
             : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',

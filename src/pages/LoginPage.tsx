@@ -5,10 +5,11 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import BrandMark from '@/components/BrandMark'
+import LoginGraphicPanel from '@/components/LoginGraphicPanel'
 import { useAuthStore } from '@/stores/authStore'
 
 const loginSchema = z.object({
@@ -45,37 +46,55 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-svh items-center justify-center">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>{t('login.title')}</CardTitle>
-          <CardDescription>{t('login.description')}</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="bg-background grid min-h-svh lg:grid-cols-2">
+      <LoginGraphicPanel />
+
+      <div className="flex flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-[380px]">
+          <div className="mb-8 flex flex-col items-center gap-4 text-center lg:items-start lg:text-left">
+            <BrandMark className="h-11 w-11" />
+            <div className="space-y-1.5">
+              <h1 className="text-xl font-medium tracking-tight">{t('login.title')}</h1>
+              <p className="text-muted-foreground text-sm">{t('login.description')}</p>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t('login.email')}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-foreground/80 text-sm font-normal">
+                {t('login.email')}
+              </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder={t('login.emailPlaceholder')}
+                className="h-11 rounded-xl px-4"
                 {...register('email')}
               />
               {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">{t('login.password')}</Label>
-              <Input id="password" type="password" {...register('password')} />
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-foreground/80 text-sm font-normal">
+                {t('login.password')}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                className="h-11 rounded-xl px-4"
+                {...register('password')}
+              />
               {errors.password && (
                 <p className="text-destructive text-xs">{errors.password.message}</p>
               )}
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="h-11 w-full rounded-full text-sm" disabled={isLoading}>
               {isLoading ? t('login.loggingIn') : t('login.signIn')}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+
+        <p className="text-muted-foreground/70 mt-10 text-xs lg:hidden">{t('app.name')}</p>
+      </div>
     </div>
   )
 }

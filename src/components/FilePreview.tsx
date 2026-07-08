@@ -24,15 +24,17 @@ export default function FilePreview({ files, onRemove, className }: FilePreviewP
       {files.map((f) => (
         <div
           key={f.id}
-          className="border-border bg-card relative flex items-center gap-2 rounded-md border p-2 pr-8"
+          className="border-border bg-card relative flex items-center gap-2 rounded-2xl border p-2 pr-8 shadow-sm"
         >
           {f.preview ? (
-            <img src={f.preview} alt="" className="h-8 w-8 rounded object-cover" />
+            <img src={f.preview} alt="" className="h-9 w-9 rounded-lg object-cover" />
           ) : (
-            <File className="text-muted-foreground h-5 w-5" />
+            <div className="bg-accent flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+              <File className="text-accent-foreground h-4.5 w-4.5" />
+            </div>
           )}
           <div className="min-w-0">
-            <p className="max-w-24 truncate text-xs font-medium">{f.file.name}</p>
+            <p className="max-w-32 truncate text-sm font-medium">{f.file.name}</p>
             <p className="text-muted-foreground text-xs">{(f.file.size / 1024).toFixed(0)} KB</p>
           </div>
           {f.progress < 100 && (

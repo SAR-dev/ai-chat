@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useId } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,7 +17,12 @@ interface PendingFile {
 }
 
 interface ChatInputProps {
-  sessionId: string
+  /** Existing session to send into. Omit to have the composer create a new
+   * session on first send -- this is how the home/hero composer works. */
+  sessionId?: string
+  /** Renders a larger, centered composer for the "new chat" home screen. */
+  variant?: 'default' | 'hero'
+  className?: string
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -33,11 +39,22 @@ const ALLOWED_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]
 
-export default function ChatInput({ sessionId }: ChatInputProps) {
+// Roughly two lines of text-sm content plus the textarea's own padding --
+// this is the composer's resting height, so it never opens looking like a
+// cramped single-line search box.
+const MIN_TEXTAREA_HEIGHT = 56
+const MAX_TEXTAREA_HEIGHT = 200
+
+export default function ChatInput({ sessionId, variant = 'default', className }: ChatInputProps) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const rawId = useId()
+  const inputId = `file-upload-input-${rawId.replace(/[:]/g, '')}`
   const [input, setInput] = useState('')
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
+  const [isCreatingSession, setIsCreatingSession] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const createSession = useChatStore((s) => s.createSession)
   const sendMessageStreaming = useChatStore((s) => s.sendMessageStreaming)
   const stopStreaming = useChatStore((s) => s.stopStreaming)
   const isStreaming = useChatStore((s) => s.isStreaming)
@@ -65,7 +82,8 @@ export default function ChatInput({ sessionId }: ChatInputProps) {
     const ta = textareaRef.current
     if (ta) {
       ta.style.height = 'auto'
-      ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`
+      const next = Math.min(Math.max(ta.scrollHeight, MIN_TEXTAREA_HEIGHT), MAX_TEXTAREA_HEIGHT)
+      ta.style.height = `${next}px`
     }
   }, [])
 
@@ -88,10 +106,23 @@ export default function ChatInput({ sessionId }: ChatInputProps) {
     setPendingFiles([])
 
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${MIN_TEXTAREA_HEIGHT}px`
     }
-    await sendMessageStreaming(sessionId, content)
-  }, [input, pendingFiles, sessionId, sendMessageStreaming])
+
+    let targetSessionId = sessionId
+    if (!targetSessionId) {
+      setIsCreatingSession(true)
+      try {
+        const session = await createSession()
+        targetSessionId = session.id
+        navigate(`/chat/${session.id}`)
+      } finally {
+        setIsCreatingSession(false)
+      }
+    }
+
+    await sendMessageStreaming(targetSessionId, content)
+  }, [input, pendingFiles, sessionId, createSession, navigate, sendMessageStreaming])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -112,62 +143,78 @@ export default function ChatInput({ sessionId }: ChatInputProps) {
     [onDrop],
   )
 
-  const disabled = isStreaming || isLoading
+  const disabled = isStreaming || isLoading || isCreatingSession
+  const canSend = !disabled && (input.trim().length > 0 || pendingFiles.length > 0)
+  const isHero = variant === 'hero'
 
   return (
     <div
       {...getRootProps()}
-      className={cn('border-border bg-background border-t p-4', isDragActive && 'bg-primary/5')}
+      className={cn('bg-background px-4 pt-2 pb-4', isHero && 'bg-transparent px-0 py-0', className)}
     >
-      {isDragActive && (
-        <div className="border-primary text-primary mb-2 rounded-lg border-2 border-dashed p-4 text-center text-sm">
-          {t('upload.dragDrop')}
-        </div>
-      )}
-      <input {...getInputProps()} />
-      <FilePreview files={pendingFiles} onRemove={removeFile} className="mb-2" />
-      <div className="mx-auto flex max-w-3xl items-end gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => document.getElementById('file-upload-input')?.click()}
-          disabled={disabled}
-          className="shrink-0"
-        >
-          <Paperclip className="h-5 w-5" />
-        </Button>
-        <input
-          id="file-upload-input"
-          type="file"
-          multiple
-          className="hidden"
-          onChange={handleFileInput}
-          accept={ALLOWED_TYPES.join(',')}
-        />
-        <Textarea
-          ref={textareaRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={t('chat.inputPlaceholder')}
-          rows={1}
-          disabled={disabled}
-          className="max-h-[200px] min-h-10 resize-none"
-        />
-        {isStreaming ? (
-          <Button variant="outline" size="icon" onClick={stopStreaming} className="shrink-0">
-            <StopCircle className="h-5 w-5" weight="fill" />
-          </Button>
-        ) : (
-          <Button
-            onClick={handleSend}
-            size="icon"
-            disabled={disabled || (!input.trim() && pendingFiles.length === 0)}
-            className="shrink-0"
-          >
-            <PaperPlaneRight className="h-5 w-5" weight="fill" />
-          </Button>
+      <div className={cn('mx-auto max-w-3xl', isHero && 'max-w-2xl')}>
+        {isDragActive && (
+          <div className="border-primary text-primary label-mono mb-2 rounded-2xl border-2 border-dashed p-4 text-center">
+            {t('upload.dragDrop')}
+          </div>
         )}
+        <input {...getInputProps()} />
+        <FilePreview files={pendingFiles} onRemove={removeFile} className="mb-2" />
+
+        <div
+          className={cn(
+            'border-border bg-card focus-within:border-primary/60 focus-within:ring-primary/15 rounded-3xl border shadow-sm transition-all focus-within:ring-4',
+            isDragActive && 'border-primary/60 ring-primary/15 ring-4',
+            isHero && 'shadow-md',
+          )}
+        >
+          <Textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={t('chat.inputPlaceholder')}
+            rows={2}
+            disabled={disabled}
+            style={{ height: MIN_TEXTAREA_HEIGHT }}
+            className="max-h-[200px] min-h-[56px] resize-none border-0 bg-transparent px-4 pt-3.5 pb-1 text-sm shadow-none ring-0 outline-none focus-visible:ring-0"
+          />
+
+          <div className="flex items-center justify-between px-2 pb-2">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => document.getElementById(inputId)?.click()}
+              disabled={disabled}
+              className="shrink-0"
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+            <input
+              id={inputId}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFileInput}
+              accept={ALLOWED_TYPES.join(',')}
+            />
+
+            {isStreaming ? (
+              <Button
+                variant="secondary"
+                size="icon-sm"
+                onClick={stopStreaming}
+                className="shrink-0"
+              >
+                <StopCircle className="h-4 w-4" weight="fill" />
+              </Button>
+            ) : (
+              <Button onClick={handleSend} size="icon-sm" disabled={!canSend} className="shrink-0">
+                <PaperPlaneRight className="h-4 w-4" weight="fill" />
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

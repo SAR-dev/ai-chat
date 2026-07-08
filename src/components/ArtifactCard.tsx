@@ -13,12 +13,14 @@ export default function ArtifactCard({ artifact, onOpenArtifact, className }: Ar
   return (
     <div
       className={cn(
-        'border-border bg-card hover:bg-accent/50 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors',
+        'border-border bg-card hover:bg-accent/40 mt-3 flex max-w-sm cursor-pointer items-center gap-3 rounded-xl border p-3 shadow-sm transition-colors',
         className,
       )}
       onClick={onOpenArtifact}
     >
-      <FileCode className="text-primary h-5 w-5 shrink-0" />
+      <div className="bg-accent flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+        <FileCode className="text-accent-foreground h-4.5 w-4.5" />
+      </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{artifact.title}</p>
         <p className="text-muted-foreground text-xs">{artifact.language ?? artifact.type}</p>

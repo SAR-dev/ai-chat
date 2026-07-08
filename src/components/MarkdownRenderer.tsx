@@ -8,17 +8,19 @@ import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import type { Components } from 'react-markdown'
 import mermaid from 'mermaid'
+import { cn } from '@/lib/utils'
 
 mermaid.initialize({
   startOnLoad: false,
   theme: 'base',
   themeVariables: {
-    primaryColor: '#2F6FEB',
-    primaryTextColor: '#FFFFFF',
-    primaryBorderColor: '#2F6FEB',
-    lineColor: '#4F86F7',
-    secondaryColor: '#DCE8FD',
-    tertiaryColor: '#EEF2F8',
+    primaryColor: '#E8EDF4',
+    primaryTextColor: '#1F3A5F',
+    primaryBorderColor: '#1F3A5F',
+    lineColor: '#1F3A5F',
+    secondaryColor: '#F0EEE8',
+    tertiaryColor: '#FFFFFF',
+    fontFamily: 'Inter Variable, system-ui, sans-serif',
   },
 })
 
@@ -58,7 +60,10 @@ const components: Components = {
 
     if (isInline) {
       return (
-        <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-sm" {...props}>
+        <code
+          className="bg-muted text-accent-foreground rounded-md px-1.5 py-0.5 font-mono text-sm"
+          {...props}
+        >
           {children}
         </code>
       )
@@ -66,13 +71,13 @@ const components: Components = {
 
     return (
       <div className="group relative">
-        <pre className="bg-muted overflow-x-auto rounded-lg p-4 text-sm">
-          <code className={className} {...props}>
+        <pre className="bg-muted border-border overflow-x-auto rounded-xl border p-4 text-sm">
+          <code className={cn('font-mono', className)} {...props}>
             {children}
           </code>
         </pre>
         <button
-          className="bg-primary/10 hover:bg-primary/20 absolute top-2 right-2 rounded px-2 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100"
+          className="bg-background border-border hover:border-primary hover:text-primary label-mono absolute top-2 right-2 rounded-full border px-2.5 py-1 opacity-0 transition-opacity group-hover:opacity-100"
           onClick={() => {
             navigator.clipboard.writeText(String(children).replace(/\n$/, ''))
           }}
@@ -106,7 +111,7 @@ const components: Components = {
   },
   th({ children, ...props }) {
     return (
-      <th className="border-border bg-muted border px-3 py-2 text-left font-medium" {...props}>
+      <th className="border-border bg-muted label-mono border px-3 py-2 text-left" {...props}>
         {children}
       </th>
     )
@@ -120,10 +125,7 @@ const components: Components = {
   },
   blockquote({ children, ...props }) {
     return (
-      <blockquote
-        className="border-primary text-muted-foreground border-l-2 pl-4 italic"
-        {...props}
-      >
+      <blockquote className="border-primary text-muted-foreground border-l-2 pl-4" {...props}>
         {children}
       </blockquote>
     )

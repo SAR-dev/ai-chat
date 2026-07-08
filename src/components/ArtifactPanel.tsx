@@ -57,7 +57,7 @@ export default function ArtifactPanel({ artifact, onClose }: ArtifactPanelProps)
             )}
           </TabsList>
           <TabsContent value="code" className="mt-2 flex-1 p-0">
-            <ScrollArea className="border-border bg-muted h-full rounded-lg border">
+            <ScrollArea className="border-border bg-muted h-full rounded-xl border">
               <pre className="p-4 font-mono text-sm">
                 <code>{artifact.content}</code>
               </pre>
@@ -71,7 +71,7 @@ export default function ArtifactPanel({ artifact, onClose }: ArtifactPanelProps)
                     ? `<html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh">${artifact.content}</body></html>`
                     : artifact.content
                 }
-                className="h-full w-full rounded-lg border-0"
+                className="h-full w-full rounded-xl border-0"
                 sandbox="allow-scripts"
                 title="Artifact preview"
               />

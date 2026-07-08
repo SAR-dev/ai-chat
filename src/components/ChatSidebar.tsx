@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import SidebarItem from '@/components/SidebarItem'
 import SettingsModal from '@/components/SettingsModal'
+import BrandMark from '@/components/BrandMark'
 import { useChatStore } from '@/stores/chatStore'
-import { Plus, MagnifyingGlass } from '@phosphor-icons/react'
+import { Plus, MagnifyingGlass, SidebarSimple } from '@phosphor-icons/react'
 import {
   CommandDialog,
   CommandEmpty,
@@ -19,8 +21,14 @@ import {
 } from '@/components/ui/command'
 import { useAuthStore } from '@/stores/authStore'
 import { Gear } from '@phosphor-icons/react'
+import { cn } from '@/lib/utils'
 
-export default function ChatSidebar() {
+interface ChatSidebarProps {
+  collapsed?: boolean
+  onToggleCollapsed?: () => void
+}
+
+export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: ChatSidebarProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { sessionId: activeId } = useParams()
@@ -70,77 +78,171 @@ export default function ChatSidebar() {
 
   return (
     <div className="bg-sidebar flex h-full flex-col">
-      <div className="border-sidebar-border flex items-center justify-between border-b p-4">
-        <h2 className="text-sidebar-foreground font-semibold">{t('app.name')}</h2>
-      </div>
-      <div className="flex flex-col gap-2 p-3">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full justify-start gap-2"
-          onClick={handleNewChat}
-        >
-          <Plus weight="bold" className="h-4 w-4" />
-          {t('sidebar.newChat')}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-muted-foreground w-full justify-start gap-2"
-          onClick={() => setCommandOpen(true)}
-        >
-          <MagnifyingGlass className="h-4 w-4" />
-          {t('sidebar.search')}
-        </Button>
-      </div>
-
-      <ScrollArea className="flex-1 px-3">
-        {sessionsStatus === 'loading' ? (
-          <div className="space-y-2 px-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-full" />
-            ))}
-          </div>
-        ) : sessions.length === 0 ? (
-          <p className="text-sidebar-foreground/60 px-2 py-4 text-center text-sm">
-            {t('sidebar.noConversations')}
-          </p>
-        ) : (
-          <div className="space-y-0.5">
-            {sessions.map((session) => (
-              <SidebarItem
-                key={session.id}
-                session={session}
-                isActive={session.id === activeId}
-                onSelect={() => navigate(`/chat/${session.id}`)}
-                onRename={(title) => handleRename(session.id, title)}
-                onDelete={() => handleDelete(session.id)}
-              />
-            ))}
-          </div>
+      <div
+        className={cn(
+          'flex items-center gap-2.5 px-4 py-4',
+          collapsed && 'flex-col gap-3 px-0',
         )}
-      </ScrollArea>
-
-      <div className="border-sidebar-border border-t p-3">
-        {user && (
-          <div className="flex items-center gap-3 px-2 py-1.5">
-            <Avatar size="sm">
-              <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 flex flex-col">
-              <span className="text-sidebar-foreground text-xs font-medium">{user.name}</span>
-              <span className="text-sidebar-foreground/50 text-xs">{user.employeeId}</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="text-sidebar-foreground/70 shrink-0"
-              onClick={() => setSettingsOpen(true)}
+      >
+        <BrandMark className="h-6 w-6" />
+        {!collapsed && (
+          <h2 className="text-sidebar-foreground truncate text-sm font-medium">
+            {t('app.name')}
+          </h2>
+        )}
+        {onToggleCollapsed && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className={cn('text-sidebar-foreground/70 shrink-0', !collapsed && 'ml-auto')}
+                  onClick={onToggleCollapsed}
+                />
+              }
             >
-              <Gear className="h-4 w-4" />
-            </Button>
-          </div>
+              <SidebarSimple className="h-4 w-4" />
+            </TooltipTrigger>
+            <TooltipContent side={collapsed ? 'right' : 'bottom'}>
+              {collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+            </TooltipContent>
+          </Tooltip>
         )}
+      </div>
+      <div className={cn('flex flex-col gap-1 px-3 pb-2', collapsed && 'items-center px-2')}>
+        {collapsed ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={<Button variant="outline" size="icon" className="rounded-xl border-none" />}
+              onClick={handleNewChat}
+            >
+              <Plus weight="bold" className="h-4 w-4" />
+            </TooltipTrigger>
+            <TooltipContent side="right">{t('sidebar.newChat')}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-start gap-2 rounded-xl border-none bg-transparent shadow-none hover:bg-white/60 dark:hover:bg-white/5"
+            onClick={handleNewChat}
+          >
+            <Plus weight="bold" className="h-4 w-4" />
+            {t('sidebar.newChat')}
+          </Button>
+        )}
+
+        {collapsed ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground rounded-xl"
+                />
+              }
+              onClick={() => setCommandOpen(true)}
+            >
+              <MagnifyingGlass className="h-4 w-4" />
+            </TooltipTrigger>
+            <TooltipContent side="right">{t('sidebar.search')}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground w-full justify-start gap-2 rounded-xl"
+            onClick={() => setCommandOpen(true)}
+          >
+            <MagnifyingGlass className="h-4 w-4" />
+            {t('sidebar.search')}
+            <span className="border-border text-muted-foreground/70 ml-auto hidden rounded-md border px-1 text-[10px] sm:inline">
+              &#8984;K
+            </span>
+          </Button>
+        )}
+      </div>
+
+      {!collapsed && (
+        <div className="text-muted-foreground/60 px-4 pt-2 pb-1 text-xs font-medium">
+          {t('sidebar.recent')}
+        </div>
+      )}
+
+      {!collapsed && (
+        <ScrollArea className="flex-1 px-3">
+          {sessionsStatus === 'loading' ? (
+            <div className="space-y-2 px-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-full" />
+              ))}
+            </div>
+          ) : sessions.length === 0 ? (
+            <p className="text-sidebar-foreground/60 px-2 py-4 text-center text-sm">
+              {t('sidebar.noConversations')}
+            </p>
+          ) : (
+            <div className="space-y-0.5 pb-2">
+              {sessions.map((session) => (
+                <SidebarItem
+                  key={session.id}
+                  session={session}
+                  isActive={session.id === activeId}
+                  onSelect={() => navigate(`/chat/${session.id}`)}
+                  onRename={(title) => handleRename(session.id, title)}
+                  onDelete={() => handleDelete(session.id)}
+                />
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      )}
+      {collapsed && <div className="flex-1" />}
+
+      <div className={cn('border-sidebar-border border-t p-3', collapsed && 'flex justify-center')}>
+        {user &&
+          (collapsed ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <button
+                    type="button"
+                    className="flex flex-col items-center gap-1"
+                    onClick={() => setSettingsOpen(true)}
+                  />
+                }
+              >
+                <Avatar size="sm">
+                  <AvatarFallback className="bg-accent text-accent-foreground font-mono">
+                    {user.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </TooltipTrigger>
+              <TooltipContent side="right">{user.name}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <div className="flex items-center gap-3 px-2 py-1.5">
+              <Avatar size="sm">
+                <AvatarFallback className="bg-accent text-accent-foreground font-mono">
+                  {user.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-1 flex-col">
+                <span className="text-sidebar-foreground text-sm font-medium">{user.name}</span>
+                <span className="text-sidebar-foreground/50 text-xs">{user.employeeId}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="text-sidebar-foreground/70 shrink-0"
+                onClick={() => setSettingsOpen(true)}
+              >
+                <Gear className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
       </div>
 
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />

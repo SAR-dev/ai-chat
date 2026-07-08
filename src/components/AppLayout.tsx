@@ -5,11 +5,15 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import ChatSidebar from '@/components/ChatSidebar'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { List } from '@phosphor-icons/react'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 export default function AppLayout() {
+  const sidebarCollapsed = useSettingsStore((s) => s.sidebarCollapsed)
+  const toggleSidebarCollapsed = useSettingsStore((s) => s.toggleSidebarCollapsed)
+
   return (
     <div className="flex h-svh w-full">
-      {/* Mobile: Sheet-based sidebar */}
+      {/* Mobile: Sheet-based sidebar (always expanded -- collapsing only matters on desktop) */}
       <div className="md:hidden">
         <Sheet>
           <SheetTrigger
@@ -25,25 +29,40 @@ export default function AppLayout() {
         </Sheet>
       </div>
 
-      {/* Desktop: Resizable sidebar */}
+      {/* Desktop sidebar: fixed icon rail when collapsed, resizable panel when expanded */}
       <div className="hidden h-full flex-1 md:flex">
-        <ResizablePanelGroup orientation="horizontal" id="sidebar-layout">
-          <ResizablePanel defaultSize="20" minSize="15" maxSize="30">
-            <div className="h-full overflow-hidden">
-              <ChatSidebar />
+        {sidebarCollapsed ? (
+          <>
+            <div className="h-full w-16 shrink-0 overflow-hidden">
+              <ChatSidebar collapsed onToggleCollapsed={toggleSidebarCollapsed} />
             </div>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize="80">
-            <div className="flex h-full flex-col">
+            <div className="flex h-full min-w-0 flex-1 flex-col">
               <main className="min-h-0 flex-1">
                 <ErrorBoundary>
                   <Outlet />
                 </ErrorBoundary>
               </main>
             </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+          </>
+        ) : (
+          <ResizablePanelGroup orientation="horizontal" id="sidebar-layout">
+            <ResizablePanel defaultSize="20" minSize="15" maxSize="30">
+              <div className="h-full overflow-hidden">
+                <ChatSidebar onToggleCollapsed={toggleSidebarCollapsed} />
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize="80">
+              <div className="flex h-full flex-col">
+                <main className="min-h-0 flex-1">
+                  <ErrorBoundary>
+                    <Outlet />
+                  </ErrorBoundary>
+                </main>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )}
       </div>
 
       {/* Mobile: Content area */}

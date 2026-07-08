@@ -15,6 +15,7 @@
   },
   "sidebar": {
     "newChat": "新しいチャット",
+    "recent": "最近",
     "noConversations": "会話がありません",
     "settings": "設定",
     "search": "会話を検索...",
@@ -23,11 +24,19 @@
     "rename": "名前を変更",
     "delete": "削除",
     "cancel": "キャンセル",
-    "confirm": "確認"
+    "confirm": "確認",
+    "collapse": "サイドバーを折りたたむ",
+    "expand": "サイドバーを展開する"
   },
   "chat": {
     "emptyState": "会話を選択するか、新しいチャットを開始してください",
     "emptyConversation": "以下のメッセージを送信して会話を始めましょう",
+    "homeGreeting": "何をお手伝いしましょうか？",
+    "homeSubtitle": "質問を入力するか、テキストを貼り付けるか、ファイルを添付して始めましょう。",
+    "homeSuggestionSummarize": "文書を要約する",
+    "homeSuggestionExplain": "概念を説明する",
+    "homeSuggestionDraft": "メールを作成する",
+    "homeSuggestionCode": "コードのデバッグ",
     "inputPlaceholder": "メッセージを入力...",
     "send": "送信",
     "stop": "生成を停止",
@@ -36,6 +45,7 @@
     "edit": "編集",
     "regenerate": "再生成",
     "download": "ダウンロード",
+    "assistantLabel": "アシスタント",
     "feedback": "フィードバック",
     "feedbackHelpful": "役に立った",
     "feedbackNotHelpful": "役に立たなかった",

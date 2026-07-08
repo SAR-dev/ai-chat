@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -11,8 +10,6 @@ import ArtifactCard from '@/components/ArtifactCard'
 import type { ChatMessage as ChatMessageType } from '@/types'
 import { cn } from '@/lib/utils'
 import {
-  User,
-  Robot,
   Copy,
   PencilSimple,
   ArrowClockwise,
@@ -76,16 +73,8 @@ export default function ChatMessage({
   }
 
   return (
-    <div className={cn('group flex gap-3 px-4 py-3', isUser ? 'justify-end' : 'justify-start')}>
-      {!isUser && (
-        <Avatar className="h-8 w-8 shrink-0">
-          <AvatarFallback className="bg-primary text-primary-foreground">
-            <Robot className="h-4 w-4" weight="fill" />
-          </AvatarFallback>
-        </Avatar>
-      )}
-
-      <div className={cn('max-w-[80%] space-y-2', isUser && 'flex flex-col items-end')}>
+    <div className={cn('group px-4 py-3 sm:px-6', isUser && 'flex justify-end')}>
+      <div className={cn('max-w-[720px] min-w-0', isUser ? 'w-full max-w-[80%]' : 'w-full')}>
         {isEditing ? (
           <div className="flex flex-col gap-2">
             <Textarea
@@ -103,21 +92,16 @@ export default function ChatMessage({
               </Button>
             </div>
           </div>
+        ) : isUser ? (
+          <div className="bg-secondary text-secondary-foreground rounded-2xl px-4 py-2.5">
+            <MarkdownRenderer content={displayContent} />
+          </div>
         ) : (
-          <>
-            <div
-              className={cn(
-                'rounded-lg px-4 py-2',
-                isUser
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-card text-card-foreground border-border border',
-              )}
-            >
-              <MarkdownRenderer content={displayContent} />
-              {isStreaming && streamingContent === '' && (
-                <span className="inline-block h-4 w-2 animate-pulse bg-current" />
-              )}
-            </div>
+          <div>
+            <MarkdownRenderer content={displayContent} />
+            {isStreaming && streamingContent === '' && (
+              <span className="bg-primary inline-block h-3.5 w-1.5 animate-pulse rounded-full align-middle" />
+            )}
             {message.artifacts?.map((artifact) => (
               <ArtifactCard
                 key={artifact.id}
@@ -125,11 +109,16 @@ export default function ChatMessage({
                 onOpenArtifact={() => onOpenArtifact?.(artifact.id)}
               />
             ))}
-          </>
+          </div>
         )}
 
         {!isStreaming && !isEditing && (
-          <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+          <div
+            className={cn(
+              'mt-1.5 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100',
+              isUser && 'justify-end',
+            )}
+          >
             <Tooltip>
               <TooltipTrigger
                 render={<Button variant="ghost" size="icon-xs" />}
@@ -212,14 +201,6 @@ export default function ChatMessage({
           </div>
         )}
       </div>
-
-      {isUser && (
-        <Avatar className="h-8 w-8 shrink-0">
-          <AvatarFallback className="bg-muted text-muted-foreground">
-            <User className="h-4 w-4" weight="fill" />
-          </AvatarFallback>
-        </Avatar>
-      )}
     </div>
   )
 }

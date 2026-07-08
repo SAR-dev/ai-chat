@@ -32,14 +32,12 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
 
   if (messagesStatus === 'loading') {
     return (
-      <div className="flex-1 space-y-4 p-4">
+      <div className="flex-1 space-y-6 p-4 sm:p-6">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="flex gap-3">
-            <Skeleton className="h-8 w-8 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
+          <div key={i} className="border-border space-y-2 border-l-2 pl-4">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
           </div>
         ))}
       </div>

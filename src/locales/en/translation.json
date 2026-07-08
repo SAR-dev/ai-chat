@@ -15,6 +15,7 @@
   },
   "sidebar": {
     "newChat": "New Chat",
+    "recent": "Recent",
     "noConversations": "No conversations yet",
     "settings": "Settings",
     "search": "Search conversations...",
@@ -23,11 +24,19 @@
     "rename": "Rename",
     "delete": "Delete",
     "cancel": "Cancel",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
   },
   "chat": {
     "emptyState": "Select a conversation or start a new chat",
     "emptyConversation": "Start a conversation by sending a message below",
+    "homeGreeting": "What can I help with?",
+    "homeSubtitle": "Ask a question, paste some text, or attach a file to get started.",
+    "homeSuggestionSummarize": "Summarize a document",
+    "homeSuggestionExplain": "Explain a concept",
+    "homeSuggestionDraft": "Draft an email",
+    "homeSuggestionCode": "Debug some code",
     "inputPlaceholder": "Type a message...",
     "send": "Send",
     "stop": "Stop generating",
@@ -36,6 +45,7 @@
     "edit": "Edit",
     "regenerate": "Regenerate",
     "download": "Download",
+    "assistantLabel": "Assistant",
     "feedback": "Feedback",
     "feedbackHelpful": "Helpful",
     "feedbackNotHelpful": "Not helpful",

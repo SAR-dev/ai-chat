@@ -14,12 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/authStore'
 import { useSettingsStore } from '@/stores/settingsStore'
@@ -154,11 +149,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
             />
           </div>
 
-          <Button
-            variant="outline"
-            className="w-full gap-2"
-            onClick={handleReset}
-          >
+          <Button variant="outline" className="w-full gap-2" onClick={handleReset}>
             <ArrowCounterClockwise className="h-4 w-4" />
             {t('settings.resetDefaults')}
           </Button>
