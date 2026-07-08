@@ -166,22 +166,106 @@ const components: Components = {
     return <>{children}</>
   },
   h1({ children, ...props }) {
-    return <h1 className="my-4 text-xl font-bold" {...props}>{children}</h1>
+    return (
+      <h1 className="mt-8 mb-3 text-2xl font-semibold tracking-tight first:mt-0" {...props}>
+        {children}
+      </h1>
+    )
   },
   h2({ children, ...props }) {
-    return <h2 className="my-4 text-lg font-bold" {...props}>{children}</h2>
+    return (
+      <h2 className="mt-7 mb-3 text-xl font-semibold tracking-tight first:mt-0" {...props}>
+        {children}
+      </h2>
+    )
   },
   h3({ children, ...props }) {
-    return <h3 className="my-4 text-base font-semibold" {...props}>{children}</h3>
+    return (
+      <h3 className="mt-6 mb-2 text-lg font-semibold first:mt-0" {...props}>
+        {children}
+      </h3>
+    )
   },
   h4({ children, ...props }) {
-    return <h4 className="my-3 text-sm font-semibold" {...props}>{children}</h4>
+    return (
+      <h4 className="mt-5 mb-2 text-base font-semibold first:mt-0" {...props}>
+        {children}
+      </h4>
+    )
   },
   h5({ children, ...props }) {
-    return <h5 className="my-2 text-sm font-medium" {...props}>{children}</h5>
+    return (
+      <h5 className="mt-4 mb-2 text-sm font-semibold first:mt-0" {...props}>
+        {children}
+      </h5>
+    )
   },
   h6({ children, ...props }) {
-    return <h6 className="my-2 text-sm font-medium" {...props}>{children}</h6>
+    return (
+      <h6 className="text-muted-foreground mt-4 mb-2 text-sm font-semibold first:mt-0" {...props}>
+        {children}
+      </h6>
+    )
+  },
+  p({ children, ...props }) {
+    return (
+      <p className="my-3 leading-7 first:mt-0 last:mb-0" {...props}>
+        {children}
+      </p>
+    )
+  },
+  ul({ children, ...props }) {
+    return (
+      <ul className="marker:text-muted-foreground my-3 list-disc space-y-1.5 pl-6 first:mt-0 last:mb-0" {...props}>
+        {children}
+      </ul>
+    )
+  },
+  ol({ children, ...props }) {
+    return (
+      <ol className="marker:text-muted-foreground my-3 list-decimal space-y-1.5 pl-6 first:mt-0 last:mb-0" {...props}>
+        {children}
+      </ol>
+    )
+  },
+  li({ children, ...props }) {
+    return (
+      <li className="leading-7 pl-1 [&>ol]:my-1 [&>p]:my-0 [&>ul]:my-1" {...props}>
+        {children}
+      </li>
+    )
+  },
+  strong({ children, ...props }) {
+    return (
+      <strong className="font-semibold" {...props}>
+        {children}
+      </strong>
+    )
+  },
+  em({ children, ...props }) {
+    return (
+      <em className="italic" {...props}>
+        {children}
+      </em>
+    )
+  },
+  hr(props) {
+    return <hr className="border-border my-6" {...props} />
+  },
+  input({ type, checked, disabled, ...props }) {
+    if (type === 'checkbox') {
+      return (
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={disabled}
+          readOnly
+          className="accent-primary mr-2 -translate-y-px align-middle"
+          {...props}
+        />
+      )
+    }
+    return <input type={type} {...props} />
   },
   code({ className, children, ...props }) {
     const isInline = !className
@@ -254,13 +338,13 @@ const components: Components = {
           <code className={cn('font-mono', className)}>
             {lines.length > 1
               ? lines.map((line, i) => (
-                  <span key={i} className="table-row">
+                <span key={i} className="table-row">
                     <span className="text-muted-foreground/30 table-cell pr-4 text-right text-xs select-none">
                       {i + 1}
                     </span>
                     <span className="table-cell">{line || ' '}</span>
                   </span>
-                ))
+              ))
               : codeString}
           </code>
         </pre>
@@ -271,8 +355,6 @@ const components: Components = {
     return (
       <a
         href={href}
-        target="_blank"
-        rel="noopener noreferrer"
         className="text-primary hover:text-primary/80 underline underline-offset-2"
         {...props}
       >
@@ -282,7 +364,7 @@ const components: Components = {
   },
   table({ children, ...props }) {
     return (
-      <div className="my-4 overflow-x-auto">
+      <div className="border-border my-4 overflow-x-auto rounded-lg border first:mt-0 last:mb-0">
         <table className="w-full border-collapse text-sm" {...props}>
           {children}
         </table>
@@ -291,21 +373,24 @@ const components: Components = {
   },
   th({ children, ...props }) {
     return (
-      <th className="border-border bg-muted label-mono border px-3 py-2 text-left" {...props}>
+      <th className="bg-muted label-mono border-border border-b px-3 py-2 text-left font-semibold" {...props}>
         {children}
       </th>
     )
   },
   td({ children, ...props }) {
     return (
-      <td className="border-border border px-3 py-2" {...props}>
+      <td className="border-border border-b px-3 py-2 [tbody_tr:last-child_&]:border-b-0" {...props}>
         {children}
       </td>
     )
   },
   blockquote({ children, ...props }) {
     return (
-      <blockquote className="border-primary text-muted-foreground border-l-2 pl-4" {...props}>
+      <blockquote
+        className="border-border text-muted-foreground my-3 border-l-2 pl-4 first:mt-0 last:mb-0 [&>p]:my-1"
+        {...props}
+      >
         {children}
       </blockquote>
     )
