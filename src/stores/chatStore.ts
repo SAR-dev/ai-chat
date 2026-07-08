@@ -31,6 +31,7 @@ interface ChatState {
   loadMoreSessions: () => Promise<void>
   createSession: () => Promise<ChatSessionSummary>
   deleteSession: (id: string) => Promise<void>
+  renameSession: (id: string, title: string) => Promise<void>
   setActiveSession: (id: string | null) => void
   loadMessages: (sessionId: string) => Promise<void>
 
@@ -44,7 +45,7 @@ interface ChatState {
       agent_mode?: boolean
       file?: File
     },
-  ) => Promise<void>
+  ) => Promise<string>
 
   sendRagMessage: (
     sessionId: string,
@@ -170,6 +171,28 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     })
   },
 
+  renameSession: async (id: string, title: string) => {
+    const trimmed = title.trim()
+    if (!trimmed) return
+
+    const previousTitle = get().sessions.find((s) => s.id === id)?.title
+
+    set((state) => ({
+      sessions: state.sessions.map((s) => (s.id === id ? { ...s, title: trimmed } : s)),
+    }))
+
+    try {
+      await api.renameSessionApi(id, trimmed)
+    } catch {
+      // Roll back on failure so the UI doesn't show a title that never saved.
+      set((state) => ({
+        sessions: state.sessions.map((s) =>
+          s.id === id ? { ...s, title: previousTitle ?? s.title } : s,
+        ),
+      }))
+    }
+  },
+
   setActiveSession: (id: string | null) => {
     set({ activeSessionId: id })
   },
@@ -205,10 +228,20 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         }),
       )
 
-      set((state) => ({
-        messagesBySessionId: { ...state.messagesBySessionId, [sessionId]: messages },
-        messagesStatus: 'idle',
-      }))
+      set((state) => {
+        const exists = state.sessions.some((s) => s.id === sessionId)
+        const sessions = exists
+          ? state.sessions.map((s) =>
+              s.id === sessionId ? { ...s, title: result.session.title } : s,
+            )
+          : [{ id: sessionId, title: result.session.title }, ...state.sessions]
+
+        return {
+          messagesBySessionId: { ...state.messagesBySessionId, [sessionId]: messages },
+          messagesStatus: 'idle',
+          sessions,
+        }
+      })
     } catch {
       set({ messagesStatus: 'error' })
     }
@@ -224,6 +257,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     assistantMsg.uuid = uuidv4()
 
     const existing = state.messagesBySessionId[sessionId] ?? []
+    const isPlaceholder = sessionId.startsWith('opt-')
 
     set({
       messagesBySessionId: {
@@ -236,11 +270,17 @@ export const useChatStore = create<ChatState>()((set, get) => ({
 
     abortController = new AbortController()
 
+    // If this is still a local-only placeholder id, don't send it -- the
+    // backend will mint a real one. Otherwise pass it along so the backend
+    // continues *this* conversation instead of quietly starting a new one
+    // (which is what was causing duplicate entries to appear in the sidebar).
+    let realSessionId: string | null = null
+
     try {
       await api.chatStream(
         {
           message,
-          session_id: sessionId,
+          session_id: isPlaceholder ? undefined : sessionId,
           mode: opts?.mode,
           internet_search: opts?.internet_search,
           slide_mode: opts?.slide_mode,
@@ -262,17 +302,18 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             })
           },
           onTitleUpdated: (data) => {
+            if (isPlaceholder && data.session_id !== sessionId) {
+              realSessionId = data.session_id
+            }
             set((s) => {
-              const existingSession = s.sessions.find((sess) => sess.id === data.session_id)
-              if (existingSession) {
-                return {
-                  sessions: s.sessions.map((sess) =>
-                    sess.id === data.session_id ? { ...sess, title: data.session_title } : sess,
-                  ),
-                }
-              }
+              // Replace our optimistic placeholder (or an existing real entry
+              // with this id) rather than blindly prepending -- prepending
+              // unconditionally is what produced the duplicate-looking rows.
+              const withoutStale = s.sessions.filter(
+                (sess) => sess.id !== sessionId && sess.id !== data.session_id,
+              )
               return {
-                sessions: [{ id: data.session_id, title: data.session_title }, ...s.sessions],
+                sessions: [{ id: data.session_id, title: data.session_title }, ...withoutStale],
               }
             })
           },
@@ -416,6 +457,20 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         set({ isStreaming: false, streamingMessageId: null })
       }
     }
+
+    if (realSessionId) {
+      const newId: string = realSessionId
+      set((s) => {
+        const { [sessionId]: messagesToMove, ...restMessages } = s.messagesBySessionId
+        return {
+          messagesBySessionId: { ...restMessages, [newId]: messagesToMove ?? [] },
+          activeSessionId: s.activeSessionId === sessionId ? newId : s.activeSessionId,
+        }
+      })
+      return newId
+    }
+
+    return sessionId
   },
 
   sendRagMessage: async (sessionId, query, category, opts) => {
@@ -445,7 +500,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         {
           query,
           category,
-          session_id: sessionId,
+          session_id: sessionId.startsWith('opt-') ? undefined : sessionId,
           top_k: opts?.top_k ?? '5',
           show_context: opts?.show_context,
           mode: opts?.mode,
@@ -530,20 +585,44 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     }
   },
 
-  regenerateMessage: async (sessionId: string, _messageId: number) => {
-    // Re-send the same query to the stream endpoint to get a new response
+  regenerateMessage: async (sessionId: string, assistantMessageId: number) => {
     const state = get()
     const msgs = state.messagesBySessionId[sessionId] ?? []
-    // Find the user message that precedes the assistant message being regenerated
-    const lastUserMsg = [...msgs].reverse().find((m) => m.type === 'right')
-    // Remove the last assistant message
-    const trimmed = msgs.slice(0, -1)
+
+    // Find the assistant message being regenerated
+    const msgIndex = msgs.findIndex((m) => m.assistantMessageId === assistantMessageId)
+    if (msgIndex === -1) return
+
+    // Find the preceding user message
+    let userIndex = -1
+    for (let i = msgIndex - 1; i >= 0; i--) {
+      if (msgs[i].type === 'right') {
+        userIndex = i
+        break
+      }
+    }
+    if (userIndex === -1) return
+
+    const userMsg = msgs[userIndex]
+    const truncateId = userMsg.dbId
+
+    // Truncate on server from this user message onwards
+    if (truncateId) {
+      try {
+        await api.truncateMessages(sessionId, { from_message_id: truncateId })
+      } catch {
+        // ignore
+      }
+    }
+
+    // Truncate locally from this user message onwards
+    const trimmed = msgs.slice(0, userIndex)
     set({
       messagesBySessionId: { ...state.messagesBySessionId, [sessionId]: trimmed },
     })
-    if (lastUserMsg) {
-      await get().sendChatMessage(sessionId, lastUserMsg.content)
-    }
+
+    // Re-send the user message content
+    await get().sendChatMessage(sessionId, userMsg.content)
   },
 
   editAndResend: async (sessionId, fromMessageId, newContent) => {
@@ -575,6 +654,16 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     } catch {
       // ignore
     }
+    // Update local state immediately
+    set((state) => {
+      const updatedMsgs: Record<string, MessageState[]> = {}
+      for (const [sid, msgs] of Object.entries(state.messagesBySessionId)) {
+        updatedMsgs[sid] = msgs.map((m) =>
+          m.assistantMessageId === messageId ? { ...m, is_helpful: isHelpful } : m,
+        )
+      }
+      return { messagesBySessionId: updatedMsgs }
+    })
   },
 
   regenerateSlide: async (deckId, slideId, instruction) => {

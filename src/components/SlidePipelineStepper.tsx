@@ -1,23 +1,27 @@
 import type { SlideStageEvent, SlideStageId } from '@/types'
 
-const STAGE_LABELS: Record<SlideStageId, string> = {
-  research: 'Research',
-  style: 'Style',
-  planning: 'Planning',
-  quality: 'Quality',
-  visual_identity: 'Visual Identity',
-  images: 'Images',
-  rendering: 'Rendering',
-  validation: 'Validation',
-  packaging: 'Packaging',
-}
+const STAGE_CATALOG: { id: SlideStageId; label: string }[] = [
+  { id: 'research', label: '情報収集' },
+  { id: 'style', label: 'スタイル選定' },
+  { id: 'planning', label: '構成作成' },
+  { id: 'quality', label: '品質チェック' },
+  { id: 'visual_identity', label: 'ビジュアル選定' },
+  { id: 'images', label: '画像検索' },
+  { id: 'rendering', label: 'レンダリング' },
+  { id: 'validation', label: '検証' },
+  { id: 'packaging', label: 'PPTX作成' },
+]
+
+const STAGE_LABELS: Record<SlideStageId, string> = Object.fromEntries(
+  STAGE_CATALOG.map((s) => [s.id, s.label]),
+) as Record<SlideStageId, string>
 
 interface SlidePipelineStepperProps {
   stages: Record<string, SlideStageEvent>
 }
 
 export default function SlidePipelineStepper({ stages }: SlidePipelineStepperProps) {
-  const stageIds = Object.keys(STAGE_LABELS) as SlideStageId[]
+  const stageIds = STAGE_CATALOG.map((s) => s.id)
 
   return (
     <div className="my-3 space-y-1.5">

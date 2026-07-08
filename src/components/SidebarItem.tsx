@@ -115,14 +115,15 @@ export default function SidebarItem({
       {onRename && <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Rename conversation</DialogTitle>
+            <DialogTitle>{t('sidebar.renameConversation')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-muted-foreground text-sm">
-              Current name: <span className="text-foreground font-medium">{session.title}</span>
+              {t('sidebar.currentName')}{' '}
+              <span className="text-foreground font-medium">{session.title}</span>
             </p>
             <div className="space-y-1.5">
-              <Label htmlFor="rename-conversation-input">New name</Label>
+              <Label htmlFor="rename-conversation-input">{t('sidebar.newName')}</Label>
               <Input
                 id="rename-conversation-input"
                 value={editTitle}
@@ -137,10 +138,10 @@ export default function SidebarItem({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsRenameOpen(false)}>
-              Cancel
+              {t('sidebar.cancel')}
             </Button>
             <Button onClick={handleRename} disabled={!editTitle.trim()}>
-              Save
+              {t('sidebar.save')}
             </Button>
           </DialogFooter>
         </DialogContent>

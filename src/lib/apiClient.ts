@@ -265,7 +265,6 @@ export async function chatStream(
     const formData = new FormData()
     formData.append('file', data.file)
     formData.append('message', data.message)
-    if (data.session_id) formData.append('session_id', data.session_id)
     if (data.mode) formData.append('mode', data.mode)
     if (data.internet_search !== undefined) formData.append('internet_search', String(data.internet_search))
     if (data.slide_mode) formData.append('slide_mode', data.slide_mode)
@@ -312,6 +311,10 @@ export async function fetchSession(sessionId: string): Promise<ChatHistoryRespon
 
 export async function deleteSessionApi(sessionId: string): Promise<void> {
   await apiClient.delete(`/sessions/${sessionId}`)
+}
+
+export async function renameSessionApi(sessionId: string, title: string): Promise<void> {
+  await apiClient.patch(`/sessions/${sessionId}`, { title })
 }
 
 export async function truncateMessages(

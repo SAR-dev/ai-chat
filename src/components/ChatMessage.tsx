@@ -5,6 +5,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import ArtifactRenderer from '@/components/ArtifactRenderer'
+import ImageGenLoading from '@/components/ImageGenLoading'
+import ImageZoomModal from '@/components/ImageZoomModal'
 import SlideDeckView from '@/components/SlideDeckView'
 import SlidePipelineStepper from '@/components/SlidePipelineStepper'
 import type { MessageState } from '@/types'
@@ -18,6 +20,7 @@ import {
   Download,
 } from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
+import { translateStatus } from '@/utils/statusMessages'
 import * as api from '@/lib/apiClient'
 import { toast } from 'sonner'
 
@@ -38,6 +41,7 @@ export default function ChatMessage({
   const isUser = message.type === 'right'
   const displayContent = isStreaming ? (streamingContent ?? '') : message.content
   const [isEditing, setIsEditing] = useState(false)
+  const [zoomIndex, setZoomIndex] = useState<number | null>(null)
   const [editContent, setEditContent] = useState(message.content)
   const editAndResend = useChatStore((s) => s.editAndResend)
   const regenerateMessage = useChatStore((s) => s.regenerateMessage)
@@ -125,24 +129,33 @@ export default function ChatMessage({
           </div>
         )}
 
-        {message.imageStatus && (
-          <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="bg-primary h-3 w-3 animate-pulse rounded-full" />
-            {message.imageStatus}
-          </div>
-        )}
+        {message.imageStatus && <ImageGenLoading status={message.imageStatus} />}
 
         {message.images.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">
             {message.images.map((img, i) => (
-              <img
+              <button
                 key={i}
-                src={img.b64}
-                alt={img.caption ?? ''}
-                className="max-h-48 rounded-xl object-contain shadow-sm"
-              />
+                type="button"
+                onClick={() => setZoomIndex(i)}
+                className="cursor-zoom-in overflow-hidden rounded-xl transition-transform hover:scale-[1.02]"
+              >
+                <img
+                  src={img.b64}
+                  alt={img.caption ?? ''}
+                  className="max-h-48 rounded-xl object-contain shadow-sm"
+                />
+              </button>
             ))}
           </div>
+        )}
+
+        {zoomIndex !== null && (
+          <ImageZoomModal
+            images={message.images}
+            index={zoomIndex}
+            onOpenChange={(open) => !open && setZoomIndex(null)}
+          />
         )}
 
         {isEditing ? (
@@ -176,9 +189,6 @@ export default function ChatMessage({
         ) : (
           <div className="min-w-0 break-words">
             <MarkdownRenderer content={displayContent} sources={message.sources} />
-            {isStreaming && streamingContent === '' && (
-              <span className="bg-primary inline-block h-3.5 w-1.5 animate-pulse rounded-full align-middle" />
-            )}
 
             {message.sources.length > 0 && (
               <div className="mt-3 space-y-1">
@@ -211,7 +221,7 @@ export default function ChatMessage({
             {message.slideStatus && (
               <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="bg-primary h-3 w-3 animate-pulse rounded-full" />
-                {message.slideStatus}
+                {translateStatus(message.slideStatus, t)}
               </div>
             )}
 

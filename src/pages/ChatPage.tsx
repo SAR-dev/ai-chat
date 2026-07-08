@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ChatWindow from '@/components/ChatWindow'
+import ChatHeader from '@/components/ChatHeader'
 import ChatInput from '@/components/ChatInput'
 import { useChatStore } from '@/stores/chatStore'
 import {
@@ -86,6 +87,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-full min-w-0 flex-col">
+      <ChatHeader sessionId={sessionId} />
       <ChatWindow sessionId={sessionId} />
       <ChatInput sessionId={sessionId} />
     </div>

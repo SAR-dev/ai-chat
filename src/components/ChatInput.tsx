@@ -15,6 +15,8 @@ import {
   Presentation,
   Palette,
   FolderOpen,
+  Globe,
+  Bot,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDropzone } from 'react-dropzone'
@@ -79,6 +81,8 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
   const [isCreatingSession, setIsCreatingSession] = useState(false)
   const [mode, setMode] = useState<string>(MODES[0].id)
   const [slideStyle, setSlideStyle] = useState<string>(SLIDE_STYLES[0].id)
+  const [internetSearch, setInternetSearch] = useState(false)
+  const [agentMode, setAgentMode] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>('normalChat')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const createSession = useChatStore((s) => s.createSession)
@@ -125,6 +129,24 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
     adjustHeight()
   }, [input, adjustHeight])
 
+  const isTouchDevice = useCallback(
+    () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
+    [],
+  )
+
+  const disabled = isStreaming || isLoading || isCreatingSession
+
+  // Autofocus on mount / when switching conversations, and again once the
+  // input re-enables after sending -- so the user can keep typing without
+  // having to click back into the box. Skipped on touch devices so we don't
+  // pop the mobile keyboard open unprompted.
+  useEffect(() => {
+    if (!disabled && !isTouchDevice()) {
+      textareaRef.current?.focus()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, disabled])
+
   const removeFile = useCallback((id: string) => {
     setPendingFiles((prev) => {
       const file = prev.find((f) => f.id === id)
@@ -163,14 +185,21 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
       await sendRagMessage(targetSessionId, content, cat, {
         mode: modeVal,
         top_k: '5',
+        internet_search: internetSearch,
+        agent_mode: agentMode,
       })
     } else {
-      await sendChatMessage(targetSessionId, content, {
+      const effectiveSessionId = await sendChatMessage(targetSessionId, content, {
         mode: modeVal,
         slide_mode: slideStyle as 'standard' | 'creative',
+        internet_search: internetSearch,
+        agent_mode: agentMode,
       })
+      if (effectiveSessionId !== targetSessionId && sessionId === targetSessionId) {
+        navigate(`/chat/${effectiveSessionId}`, { replace: true })
+      }
     }
-  }, [input, pendingFiles, sessionId, createSession, navigate, sendChatMessage, sendRagMessage, mode, slideStyle, category, selectedCategory])
+  }, [input, pendingFiles, sessionId, createSession, navigate, sendChatMessage, sendRagMessage, mode, slideStyle, internetSearch, agentMode, category, selectedCategory])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -191,7 +220,6 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
     [onDrop],
   )
 
-  const disabled = isStreaming || isLoading || isCreatingSession
   const canSend = !disabled && (input.trim().length > 0 || pendingFiles.length > 0)
   const isHero = variant === 'hero'
   const activeMode = MODES.find((m) => m.id === mode) ?? MODES[0]
@@ -298,6 +326,49 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
                       )
                     })}
                   </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-muted-foreground flex items-center gap-2 text-xs">
+                      <Globe className="h-3.5 w-3.5" />
+                      Internet Search
+                    </span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={internetSearch}
+                      onClick={() => setInternetSearch(!internetSearch)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                        internetSearch ? 'bg-primary' : 'bg-input'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm ring-0 transition-transform ${
+                          internetSearch ? 'translate-x-4' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-muted-foreground flex items-center gap-2 text-xs">
+                      <Bot className="h-3.5 w-3.5" />
+                      Agent Mode
+                    </span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={agentMode}
+                      onClick={() => setAgentMode(!agentMode)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                        agentMode ? 'bg-primary' : 'bg-input'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm ring-0 transition-transform ${
+                          agentMode ? 'translate-x-4' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
                   {categories.length > 0 && (
                     <>
                       <DropdownMenuSeparator />
