@@ -7,7 +7,13 @@ npm install
 npm run dev
 ```
 
-Login with `demo@example.com` / any password.
+Login with `demo` / `demo1234` (mock backend — see `src/mocks/`).
+
+> **Note:** The sign-in UI is copy-ready for Kiwi/company-credential login, but
+> `/api/login` is currently served by MSW mocks against a fake in-memory user
+> (`src/mocks/db.ts`). Point `VITE_API_BASE_URL` at the real auth backend and
+> remove/disable mocks (`VITE_USE_MOCKS=false`) once Kiwi (or an equivalent
+> SSO/LDAP integration) is wired up server-side.
 
 ## Code Style
 

@@ -6,15 +6,15 @@ import { Textarea } from '@/components/ui/textarea'
 import FilePreview from '@/components/FilePreview'
 import { useChatStore } from '@/stores/chatStore'
 import {
-  PaperPlaneRight,
-  StopCircle,
+  SendHorizonal,
+  CircleStop,
   Paperclip,
-  CaretDown,
-  Lightning,
+  ChevronDown,
+  Zap,
   Brain,
-  PresentationChart,
+  Presentation,
   Palette,
-} from '@phosphor-icons/react'
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDropzone } from 'react-dropzone'
 import {
@@ -28,12 +28,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 const MODES = [
-  { id: 'fast', name: 'Fast', description: 'Quick, everyday replies', icon: Lightning },
+  { id: 'fast', name: 'Fast', description: 'Quick, everyday replies', icon: Zap },
   { id: 'thinking', name: 'Think', description: 'Reasons longer for harder problems', icon: Brain },
 ] as const
 
 const SLIDE_STYLES = [
-  { id: 'standard', name: 'Standard', description: 'Clean, minimal layouts', icon: PresentationChart },
+  { id: 'standard', name: 'Standard', description: 'Clean, minimal layouts', icon: Presentation },
   { id: 'creative', name: 'Creative', description: 'Bolder visuals and layout', icon: Palette },
 ] as const
 
@@ -251,7 +251,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
                   <span className="bg-border mx-0.5 h-3 w-px shrink-0" />
                   <ActiveSlideIcon className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{activeSlideStyle.name}</span>
-                  <CaretDown className="h-3 w-3 shrink-0" />
+                  <ChevronDown className="h-3 w-3 shrink-0" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-60 p-1">
                   <DropdownMenuRadioGroup value={mode} onValueChange={setMode}>
@@ -308,11 +308,11 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
                 onClick={stopStreaming}
                 className="shrink-0"
               >
-                <StopCircle className="h-4 w-4" weight="fill" />
+                <CircleStop className="h-4 w-4" />
               </Button>
             ) : (
               <Button onClick={handleSend} size="icon-sm" disabled={!canSend} className="shrink-0">
-                <PaperPlaneRight className="h-4 w-4" weight="fill" />
+                <SendHorizonal className="h-4 w-4" />
               </Button>
             )}
           </div>

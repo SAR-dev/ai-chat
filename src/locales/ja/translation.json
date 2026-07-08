@@ -5,7 +5,7 @@
   },
   "login": {
     "title": "サインイン",
-    "titleAd": "職場または学校のサインイン",
+    "titleAd": "Kikuchatのサインイン",
     "description": "認証情報を入力してください",
     "descriptionAd": "組織の認証情報を使用してください",
     "username": "ユーザー名",
@@ -27,7 +27,7 @@
     "featureFriendlyDesc": "専門用語を使わず、わかりやすくお答えします。",
     "featurePrivateTitle": "プライベートで安全",
     "featurePrivateDesc": "あなたの会話はあなただけのものです。",
-    "trustNote": "KikuChatは、すべての会話を気軽で安全なものにするために作られています。",
+    "trustNote": "KikuChatはMass Holdings Ltd.の社内アシスタントです。会話は社外に共有されることはありません。",
     "demoHint": "デモ用ログイン: demo、パスワード: demo1234",
     "forgotPassword": "パスワードをお忘れですか?",
     "forgotPasswordToast": "このデモでは不要です。そのままサインインしてください。",
@@ -45,8 +45,12 @@
     "emailInvalid": "無効なメールアドレスです",
     "adDomainHint": "例: domain\\username",
     "noAccount": "アカウントをお持ちでないですか？",
-    "kiwiHint": "Kiwiにログインするときと同じユーザー名とパスワードを使用してください",
-    "contactAdmin": "アカウントをお持ちでない場合は、管理者にお問い合わせください。"
+    "kiwiHint": "会社のユーザー名とパスワードでサインインしてください",
+    "contactAdmin": "アクセス権をお持ちでない場合は、Mass Holdings IT管理者にお問い合わせください。",
+    "internalNotice": "社内ツール · Mass Holdings Ltd.",
+    "footerRights": "© {{year}} Mass Holdings Ltd. All rights reserved.",
+    "showPassword": "パスワードを表示",
+    "hidePassword": "パスワードを非表示"
   },
   "sidebar": {
     "newChat": "新しいチャット",

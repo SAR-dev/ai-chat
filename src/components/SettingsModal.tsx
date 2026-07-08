@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/authStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import i18n from '@/lib/i18n'
-import { ArrowCounterClockwise, SignOut } from '@phosphor-icons/react'
+import { RotateCcw, LogOut } from 'lucide-react'
 
 const settingsSchema = z.object({
   language: z.string(),
@@ -98,7 +98,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
           </div>
 
           <Button variant="outline" className="w-full gap-2" onClick={handleReset}>
-            <ArrowCounterClockwise className="h-4 w-4" />
+            <RotateCcw className="h-4 w-4" />
             {t('settings.resetDefaults')}
           </Button>
 
@@ -110,7 +110,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
               navigate('/login')
             }}
           >
-            <SignOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4" />
             {t('login.logout')}
           </Button>
         </div>

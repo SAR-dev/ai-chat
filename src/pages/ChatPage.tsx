@@ -8,20 +8,20 @@ import {
   FileText,
   Code,
   Lightbulb,
-  PenNib,
-  type Icon,
-} from '@phosphor-icons/react'
+  Pen,
+  type LucideIcon,
+} from 'lucide-react'
 
 interface Suggestion {
   key: string
-  icon: Icon
+  icon: LucideIcon
   prompt: string
 }
 
 const SUGGESTIONS: Suggestion[] = [
   { key: 'summarize', icon: FileText, prompt: 'chat.homeSuggestionSummarize' },
   { key: 'explain', icon: Lightbulb, prompt: 'chat.homeSuggestionExplain' },
-  { key: 'draft', icon: PenNib, prompt: 'chat.homeSuggestionDraft' },
+  { key: 'draft', icon: Pen, prompt: 'chat.homeSuggestionDraft' },
   { key: 'code', icon: Code, prompt: 'chat.homeSuggestionCode' },
 ]
 

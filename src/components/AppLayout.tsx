@@ -4,7 +4,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import ChatSidebar from '@/components/ChatSidebar'
 import ErrorBoundary from '@/components/ErrorBoundary'
-import { List } from '@phosphor-icons/react'
+import { Menu } from 'lucide-react'
 import { useSettingsStore } from '@/stores/settingsStore'
 
 export default function AppLayout() {
@@ -19,7 +19,7 @@ export default function AppLayout() {
           <SheetTrigger
             render={
               <Button variant="ghost" size="icon" className="fixed top-2 left-2 z-50">
-                <List className="h-5 w-5" />
+                <Menu className="h-5 w-5" />
               </Button>
             }
           />

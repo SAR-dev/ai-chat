@@ -11,9 +11,9 @@ import SettingsModal from '@/components/SettingsModal'
 import SearchModal from '@/components/SearchModal'
 import BrandMark from '@/components/BrandMark'
 import { useChatStore } from '@/stores/chatStore'
-import { Plus, MagnifyingGlass, SidebarSimple } from '@phosphor-icons/react'
+import { Plus, Search, PanelLeftClose } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
-import { Gear } from '@phosphor-icons/react'
+import { Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ChatSidebarProps {
@@ -88,7 +88,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
                 />
               }
             >
-              <SidebarSimple className="h-4 w-4" />
+              <PanelLeftClose className="h-4 w-4" />
             </TooltipTrigger>
             <TooltipContent side={collapsed ? 'right' : 'bottom'}>
               {collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
@@ -109,7 +109,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
               }
               onClick={handleNewChat}
             >
-              <Plus weight="bold" className="h-4 w-4" />
+              <Plus className="h-4 w-4" />
             </TooltipTrigger>
             <TooltipContent side="right">{t('sidebar.newChat')}</TooltipContent>
           </Tooltip>
@@ -120,7 +120,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
             className="h-9 w-full justify-start gap-2 rounded-xl border-none bg-transparent shadow-none hover:bg-white/60"
             onClick={handleNewChat}
           >
-            <Plus weight="bold" className="h-4 w-4" />
+            <Plus className="h-4 w-4" />
             {t('sidebar.newChat')}
           </Button>
         )}
@@ -137,7 +137,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
               }
               onClick={() => setSearchOpen(true)}
             >
-              <MagnifyingGlass className="h-4 w-4" />
+<Search className="h-4 w-4" />
             </TooltipTrigger>
             <TooltipContent side="right">{t('sidebar.search')}</TooltipContent>
           </Tooltip>
@@ -148,7 +148,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
             className="text-muted-foreground h-9 w-full justify-start gap-2 rounded-xl"
             onClick={() => setSearchOpen(true)}
           >
-            <MagnifyingGlass className="h-4 w-4" />
+            <Search className="h-4 w-4" />
             {t('sidebar.search')}
             <span className="border-border text-muted-foreground/70 ml-auto hidden rounded-md border px-1 text-[10px] sm:inline">
               &#8984;K
@@ -230,7 +230,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
                 className="text-sidebar-foreground/70 shrink-0"
                 onClick={() => setSettingsOpen(true)}
               >
-                <Gear className="h-4 w-4" />
+                <Settings className="h-4 w-4" />
               </Button>
             </div>
           ))}

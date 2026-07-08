@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { PencilSimple, Trash } from '@phosphor-icons/react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ChatSessionSummary } from '@/types'
 
@@ -79,7 +79,7 @@ export default function SidebarItem({
         <div className="invisible flex items-center gap-0.5 group-hover:visible">
           {onRename && (
             <Button variant="ghost" size="icon-sm" onClick={openRenameDialog}>
-              <PencilSimple className="h-3 w-3" />
+              <Pencil className="h-3 w-3" />
             </Button>
           )}
           <AlertDialog>
@@ -88,7 +88,7 @@ export default function SidebarItem({
                 <Button variant="ghost" size="icon-sm" onClick={(e) => e.stopPropagation()} />
               }
             >
-              <Trash className="h-3 w-3" />
+              <Trash2 className="h-3 w-3" />
             </AlertDialogTrigger>
             <AlertDialogContent>
               <img

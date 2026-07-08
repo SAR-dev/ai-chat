@@ -5,7 +5,7 @@
   },
   "login": {
     "title": "Sign in",
-    "titleAd": "Work or school sign in",
+    "titleAd": "Kikuchat sign in",
     "description": "Enter your credentials to continue",
     "descriptionAd": "Use your organization credentials",
     "username": "Username",
@@ -27,7 +27,7 @@
     "featureFriendlyDesc": "Clear, considerate answers, no jargon.",
     "featurePrivateTitle": "Private & secure",
     "featurePrivateDesc": "Your conversations stay yours.",
-    "trustNote": "KikuChat is designed to make every conversation easy, friendly, and secure.",
+    "trustNote": "KikuChat is Mass Holdings Ltd.'s internal assistant. Conversations stay within the company.",
     "demoHint": "Demo login: demo, password: demo1234",
     "forgotPassword": "Forgot password?",
     "forgotPasswordToast": "Not needed for this demo, just sign in.",
@@ -45,8 +45,12 @@
     "emailInvalid": "Invalid email address",
     "adDomainHint": "e.g. domain\\username",
     "noAccount": "Don't have an account?",
-    "kiwiHint": "Use the same username and password you use to login Kiwi",
-    "contactAdmin": "If you do not have an account, please contact the administrator."
+    "kiwiHint": "Sign in with your company username and password",
+    "contactAdmin": "Don't have access? Contact your Mass Holdings IT administrator.",
+    "internalNotice": "Internal tool · Mass Holdings Ltd.",
+    "footerRights": "© {{year}} Mass Holdings Ltd. All rights reserved.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "sidebar": {
     "newChat": "New Chat",

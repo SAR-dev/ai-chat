@@ -8,12 +8,12 @@ import type { MessageState } from '@/types'
 import { cn } from '@/lib/utils'
 import {
   Copy,
-  PencilSimple,
-  ArrowClockwise,
+  Pencil,
+  RefreshCw,
   ThumbsUp,
   ThumbsDown,
   Download,
-} from '@phosphor-icons/react'
+} from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
 import { toast } from 'sonner'
 
@@ -220,7 +220,7 @@ export default function ChatMessage({
                     setIsEditing(true)
                   }}
                 >
-                  <PencilSimple className="h-3 w-3" />
+                  <Pencil className="h-3 w-3" />
                 </TooltipTrigger>
                 <TooltipContent>{t('chat.edit')}</TooltipContent>
               </Tooltip>
@@ -232,7 +232,7 @@ export default function ChatMessage({
                   render={<Button variant="ghost" size="icon-xs" />}
                   onClick={handleRegenerate}
                 >
-                  <ArrowClockwise className="h-3 w-3" />
+                  <RefreshCw className="h-3 w-3" />
                 </TooltipTrigger>
                 <TooltipContent>{t('chat.regenerate')}</TooltipContent>
               </Tooltip>
@@ -247,7 +247,6 @@ export default function ChatMessage({
                   >
                     <ThumbsUp
                       className={cn('h-3 w-3', message.is_helpful === true && 'text-primary')}
-                      weight={message.is_helpful === true ? 'fill' : 'regular'}
                     />
                   </TooltipTrigger>
                   <TooltipContent>{t('chat.feedbackHelpful')}</TooltipContent>
@@ -259,7 +258,6 @@ export default function ChatMessage({
                   >
                     <ThumbsDown
                       className={cn('h-3 w-3', message.is_helpful === false && 'text-destructive')}
-                      weight={message.is_helpful === false ? 'fill' : 'regular'}
                     />
                   </TooltipTrigger>
                   <TooltipContent>{t('chat.feedbackNotHelpful')}</TooltipContent>

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { X, File } from '@phosphor-icons/react'
+import { X, File } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface PendingFile {
