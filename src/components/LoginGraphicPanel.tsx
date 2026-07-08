@@ -41,7 +41,7 @@ export default function LoginGraphicPanel() {
         {/* Mascot + speech bubble */}
         <div className="flex items-start gap-3">
           <img
-            src="/mascot/welcome-wave.png"
+            src="/vectors/welcome-wave.svg"
             alt=""
             className="h-28 w-28 shrink-0 object-contain"
             aria-hidden

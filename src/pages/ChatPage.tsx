@@ -53,7 +53,7 @@ export default function ChatPage() {
       <div className="flex h-full flex-col items-center justify-center gap-8 px-4 text-center">
         <div className="flex flex-col items-center gap-3">
           <img
-            src="/mascot/victory-pose.png"
+            src="/vectors/victory-pose.svg"
             alt=""
             className="h-24 w-24 object-contain"
             aria-hidden

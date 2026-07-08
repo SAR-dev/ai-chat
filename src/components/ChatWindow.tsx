@@ -65,7 +65,7 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
   if (messages.length == 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3">
-        <img src="/mascot/victory-pose.png" alt="" className="h-16 w-16 object-contain" aria-hidden />
+        <img src="/vectors/victory-pose.svg" alt="" className="h-16 w-16 object-contain" aria-hidden />
         <p className="text-muted-foreground text-sm">{t('chat.emptyConversation')}</p>
       </div>
     )

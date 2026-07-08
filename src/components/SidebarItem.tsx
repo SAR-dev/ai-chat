@@ -75,7 +75,7 @@ export default function SidebarItem({
           </AlertDialogTrigger>
           <AlertDialogContent>
             <img
-              src="/mascot/alert.png"
+              src="/vectors/alert.svg"
               alt=""
               className="mx-auto h-20 w-20 object-contain"
               aria-hidden
