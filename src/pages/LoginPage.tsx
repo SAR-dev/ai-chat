@@ -9,7 +9,7 @@ import { Eye, EyeOff, Building2, LoaderCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
+
 
 import LoginGraphicPanel from '@/components/LoginGraphicPanel'
 import BrandMark from '@/components/BrandMark'
@@ -36,8 +36,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [language, setLanguage] = useState(settings.language)
 
-  const handleLanguageChange = (value: string | null) => {
-    if (!value) return
+  const handleLanguageChange = (value: string) => {
     setLanguage(value)
     settings.setLanguage(value)
     i18n.changeLanguage(value)
@@ -75,7 +74,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-8 flex flex-col items-center gap-3 text-center lg:items-start lg:text-left">
-            <span className="bg-accent text-accent-foreground inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium">
+            <span className="border border-accent text-accent-foreground inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium">
               <Building2 className="h-3.5 w-3.5" />
               {t('login.internalNotice')}
             </span>
@@ -162,15 +161,26 @@ export default function LoginPage() {
           <p className="text-muted-foreground/70 mt-4 text-center text-xs">{t('login.contactAdmin')}</p>
 
           <div className="mt-6 flex justify-center">
-            <Select value={language} onValueChange={handleLanguageChange}>
-              <SelectTrigger className="h-8 w-28 text-xs">
-                <span>{language === 'en' ? t('settings.languageEn') : t('settings.languageJa')}</span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">{t('settings.languageEn')}</SelectItem>
-                <SelectItem value="ja">{t('settings.languageJa')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="bg-muted inline-flex rounded-md p-0.5">
+              <button
+                type="button"
+                onClick={() => handleLanguageChange('en')}
+                className={`cursor-pointer rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                  language === 'en' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLanguageChange('ja')}
+                className={`cursor-pointer rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                  language === 'ja' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                JA
+              </button>
+            </div>
           </div>
         </div>
 
