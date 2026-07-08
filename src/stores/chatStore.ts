@@ -502,12 +502,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       }
     }
 
-    // Refresh the session list so the correct server-side title
-    // shows up even when no `title_updated` event was received.
-    if (isNewChat && realSessionId) {
-      get().loadSessions().catch(() => {})
-    }
-
     return realSessionId ?? sessionId ?? ''
   },
 
@@ -648,9 +642,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       }
     }
 
-    if (isNewChat) {
-      get().loadSessions().catch(() => {})
-    }
   },
 
   stopStreaming: () => {

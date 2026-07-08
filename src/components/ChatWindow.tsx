@@ -39,14 +39,14 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
 
   useEffect(() => {
     setActiveSession(sessionId)
-    // Only fetch messages from the server when there are none yet for this
-    // session. A new chat that's still streaming has already been populated
-    // by the store (via the onNewSession migration), so we must not overwrite
-    // the in-flight messages with an empty or incomplete server response.
-    if (messages.length === 0) {
+    // Skip loading when a stream is in progress — the store has already been
+    // populated with optimistic + in-flight messages.  Once the stream ends
+    // `isStreaming` flips to false and this effect re-runs, fetching the
+    // complete conversation (and the real title) from the server.
+    if (!isStreaming) {
       loadMessages(sessionId)
     }
-  }, [sessionId, loadMessages, setActiveSession, messages.length])
+  }, [sessionId, loadMessages, setActiveSession, isStreaming])
 
   if (messagesStatus === 'loading') {
     return (
