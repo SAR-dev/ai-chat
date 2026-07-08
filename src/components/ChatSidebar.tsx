@@ -25,6 +25,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
   const { t } = useTranslation()
   const navigate = useNavigate()
   const activeId = useChatStore((s) => s.activeSessionId)
+  const setActiveSession = useChatStore((s) => s.setActiveSession)
   const [searchOpen, setSearchOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -182,7 +183,10 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
                   key={session.id}
                   session={session}
                   isActive={session.id === activeId}
-                  onSelect={() => navigate(`/chat/${session.id}`)}
+                  onSelect={() => {
+                    setActiveSession(session.id)
+                    navigate(`/chat/${session.id}`)
+                  }}
                   onDelete={() => handleDelete(session.id)}
                   onRename={(newTitle) => renameSession(session.id, newTitle)}
                 />
