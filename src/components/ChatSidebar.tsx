@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -24,7 +24,7 @@ interface ChatSidebarProps {
 export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: ChatSidebarProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { sessionId: activeId } = useParams()
+  const activeId = useChatStore((s) => s.activeSessionId)
   const [searchOpen, setSearchOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 

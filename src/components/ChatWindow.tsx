@@ -35,9 +35,12 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
     resetKey: sessionId,
   })
 
+  const setActiveSession = useChatStore((s) => s.setActiveSession)
+
   useEffect(() => {
+    setActiveSession(sessionId)
     loadMessages(sessionId)
-  }, [sessionId, loadMessages])
+  }, [sessionId, loadMessages, setActiveSession])
 
   if (messagesStatus === 'loading') {
     return (
