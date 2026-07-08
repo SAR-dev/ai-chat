@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pin, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ChatSessionSummary } from '@/types'
 
@@ -31,6 +31,7 @@ interface SidebarItemProps {
   onSelect: () => void
   onRename?: (title: string) => Promise<void>
   onDelete: () => Promise<void>
+  onPinToggle?: () => void
 }
 
 export default function SidebarItem({
@@ -39,6 +40,7 @@ export default function SidebarItem({
   onSelect,
   onRename,
   onDelete,
+  onPinToggle,
 }: SidebarItemProps) {
   const { t } = useTranslation()
   const [isDeleting, setIsDeleting] = useState(false)
@@ -76,7 +78,20 @@ export default function SidebarItem({
         onClick={onSelect}
       >
         <span className="flex-1 truncate">{session.title}</span>
+        {session.pinned && (
+          <Pin className="text-muted-foreground/40 h-3 w-3 shrink-0" />
+        )}
         <div className="invisible flex items-center gap-0.5 group-hover:visible">
+          {onPinToggle && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={(e) => { e.stopPropagation(); onPinToggle() }}
+              title={session.pinned ? t('sidebar.unpin') : t('sidebar.pin')}
+            >
+              <Pin className={cn('h-3 w-3', session.pinned && 'fill-current')} />
+            </Button>
+          )}
           {onRename && (
             <Button variant="ghost" size="icon-sm" onClick={openRenameDialog}>
               <Pencil className="h-3 w-3" />

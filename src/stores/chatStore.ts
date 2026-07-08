@@ -32,6 +32,7 @@ interface ChatState {
   createSession: () => Promise<ChatSessionSummary>
   deleteSession: (id: string) => Promise<void>
   renameSession: (id: string, title: string) => Promise<void>
+  togglePinSession: (id: string) => Promise<void>
   setActiveSession: (id: string | null) => void
   loadMessages: (sessionId: string) => Promise<void>
 
@@ -189,6 +190,38 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         sessions: state.sessions.map((s) =>
           s.id === id ? { ...s, title: previousTitle ?? s.title } : s,
         ),
+      }))
+    }
+  },
+
+  togglePinSession: async (id: string) => {
+    const state = get()
+    const session = state.sessions.find((s) => s.id === id)
+    if (!session) return
+    const newPinned = !session.pinned
+
+    set((s) => ({
+      sessions: s.sessions
+        .map((sess) => (sess.id === id ? { ...sess, pinned: newPinned } : sess))
+        .sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1
+          if (!a.pinned && b.pinned) return 1
+          return 0
+        }),
+    }))
+
+    try {
+      await api.pinSessionApi(id, newPinned)
+    } catch {
+      // Roll back on failure
+      set((s) => ({
+        sessions: s.sessions
+          .map((sess) => (sess.id === id ? { ...sess, pinned: !newPinned } : sess))
+          .sort((a, b) => {
+            if (a.pinned && !b.pinned) return -1
+            if (!a.pinned && b.pinned) return 1
+            return 0
+          }),
       }))
     }
   },

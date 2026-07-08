@@ -29,7 +29,7 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
   const [searchOpen, setSearchOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  const { sessions, sessionsStatus, loadSessions, createSession, deleteSession, renameSession } =
+  const { sessions, sessionsStatus, loadSessions, createSession, deleteSession, renameSession, togglePinSession } =
     useChatStore()
   const { user } = useAuthStore()
 
@@ -159,12 +159,6 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
       </div>
 
       {!collapsed && (
-        <div className="text-muted-foreground/60 px-4 pt-2 pb-1 text-xs font-medium">
-          {t('sidebar.recent')}
-        </div>
-      )}
-
-      {!collapsed && (
         <ScrollArea className="flex-1 px-3">
           {sessionsStatus === 'loading' ? (
             <div className="space-y-2 px-2">
@@ -177,20 +171,57 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
               {t('sidebar.noConversations')}
             </p>
           ) : (
-            <div className="space-y-0.5 pb-2">
-              {sessions.map((session) => (
-                <SidebarItem
-                  key={session.id}
-                  session={session}
-                  isActive={session.id === activeId}
-                  onSelect={() => {
-                    setActiveSession(session.id)
-                    navigate(`/chat/${session.id}`)
-                  }}
-                  onDelete={() => handleDelete(session.id)}
-                  onRename={(newTitle) => renameSession(session.id, newTitle)}
-                />
-              ))}
+            <div className="pb-2">
+              {(() => {
+                const pinned = sessions.filter((s) => s.pinned)
+                const unpinned = sessions.filter((s) => !s.pinned)
+                return (
+                  <>
+                    {pinned.length > 0 && (
+                      <>
+                        <div className="text-muted-foreground/60 px-4 pt-2 pb-1 text-xs font-medium">
+                          {t('sidebar.pinned')}
+                        </div>
+                        <div className="space-y-0.5">
+                          {pinned.map((session) => (
+                            <SidebarItem
+                              key={session.id}
+                              session={session}
+                              isActive={session.id === activeId}
+                              onSelect={() => {
+                                setActiveSession(session.id)
+                                navigate(`/chat/${session.id}`)
+                              }}
+                              onDelete={() => handleDelete(session.id)}
+                              onRename={(newTitle) => renameSession(session.id, newTitle)}
+                              onPinToggle={() => togglePinSession(session.id)}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    <div className="text-muted-foreground/60 px-4 pt-2 pb-1 text-xs font-medium">
+                      {t('sidebar.recent')}
+                    </div>
+                    <div className="space-y-0.5">
+                      {unpinned.map((session) => (
+                        <SidebarItem
+                          key={session.id}
+                          session={session}
+                          isActive={session.id === activeId}
+                          onSelect={() => {
+                            setActiveSession(session.id)
+                            navigate(`/chat/${session.id}`)
+                          }}
+                          onDelete={() => handleDelete(session.id)}
+                          onRename={(newTitle) => renameSession(session.id, newTitle)}
+                          onPinToggle={() => togglePinSession(session.id)}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )
+              })()}
             </div>
           )}
         </ScrollArea>

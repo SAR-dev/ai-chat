@@ -68,6 +68,9 @@
     "delete": "Delete",
     "cancel": "Cancel",
     "confirm": "Confirm",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "pinned": "Pinned",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
   },

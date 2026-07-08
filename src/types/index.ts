@@ -104,6 +104,7 @@ export interface RagChatResponse {
 export interface ChatSessionSummary {
   id: string
   title: string
+  pinned?: boolean
 }
 
 export interface SessionHistoryResponse {

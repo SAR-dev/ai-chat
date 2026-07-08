@@ -317,6 +317,10 @@ export async function renameSessionApi(sessionId: string, title: string): Promis
   await apiClient.patch(`/sessions/${sessionId}`, { title })
 }
 
+export async function pinSessionApi(sessionId: string, pinned: boolean): Promise<void> {
+  await apiClient.patch(`/sessions/${sessionId}`, { pinned })
+}
+
 export async function truncateMessages(
   sessionId: string,
   data: TruncateRequest,
