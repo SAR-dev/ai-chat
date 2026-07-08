@@ -30,7 +30,6 @@ export default function ChatPage() {
   const { sessionId } = useParams()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const createSession = useChatStore((s) => s.createSession)
   const sendChatMessage = useChatStore((s) => s.sendChatMessage)
   const [isStarting, setIsStarting] = useState(false)
 
@@ -39,17 +38,14 @@ export default function ChatPage() {
       if (isStarting) return
       setIsStarting(true)
       try {
-        const session = await createSession()
-        navigate(`/chat/${session.id}`)
-        const realId = await sendChatMessage(session.id, prompt)
-        if (realId !== session.id) {
-          navigate(`/chat/${realId}`, { replace: true })
-        }
+        await sendChatMessage(null, prompt, undefined, (id) => {
+          navigate(`/chat/${id}`)
+        })
       } finally {
         setIsStarting(false)
       }
     },
-    [createSession, navigate, sendChatMessage, isStarting],
+    [sendChatMessage, navigate, isStarting],
   )
 
   if (!sessionId) {

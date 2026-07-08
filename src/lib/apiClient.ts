@@ -75,6 +75,7 @@ export async function register(data: RegistrationRequest): Promise<RegistrationR
 
 export interface SSEStreamCallbacks {
   onToken?: (token: string) => void
+  onSessionId?: (sessionId: string) => void
   onTitleUpdated?: (data: { session_title: string; session_id: string }) => void
   onAgentTools?: (data: { tools: string[]; reasoning?: string }) => void
   onArtifact?: (artifact: Record<string, unknown>) => void
@@ -120,6 +121,9 @@ async function streamFromURL(
   }
 
   const sessionId = response.headers.get('X-Session-Id') ?? ''
+  if (sessionId) {
+    callbacks.onSessionId?.(sessionId)
+  }
 
   const reader = response.body?.getReader()
   if (!reader) throw new Error('No response body')

@@ -32,7 +32,6 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
   const sessions = useChatStore((s) => s.sessions)
   const sessionsStatus = useChatStore((s) => s.sessionsStatus)
   const loadSessions = useChatStore((s) => s.loadSessions)
-  const createSession = useChatStore((s) => s.createSession)
   const deleteSession = useChatStore((s) => s.deleteSession)
   const renameSession = useChatStore((s) => s.renameSession)
   const togglePinSession = useChatStore((s) => s.togglePinSession)
@@ -53,10 +52,9 @@ export default function ChatSidebar({ collapsed = false, onToggleCollapsed }: Ch
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  const handleNewChat = useCallback(async () => {
-    const session = await createSession()
-    navigate(`/chat/${session.id}`)
-  }, [createSession, navigate])
+  const handleNewChat = useCallback(() => {
+    navigate('/chat')
+  }, [navigate])
 
   const handleDelete = useCallback(
     async (id: string) => {
