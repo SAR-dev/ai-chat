@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { animate } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -43,30 +44,38 @@ export default function ChatMessage({
   const [isEditing, setIsEditing] = useState(false)
   const [revealed, setRevealed] = useState(displayContent)
   const targetRef = useRef(displayContent)
+  const posRef = useRef(displayContent.length)
 
   useEffect(() => {
     targetRef.current = displayContent
   }, [displayContent])
 
   useEffect(() => {
-    if (!isStreaming) return
+    const full = targetRef.current
 
-    let rafId: number
-
-    const tick = () => {
-      const full = targetRef.current
-      setRevealed((prev) => {
-        if (prev.length >= full.length) return prev
-        const remaining = full.length - prev.length
-        const step = Math.max(1, Math.ceil(remaining / 30))
-        rafId = requestAnimationFrame(tick)
-        return full.slice(0, prev.length + step)
-      })
+    if (!isStreaming) {
+      posRef.current = full.length
+      setRevealed(full)
+      return
     }
 
-    rafId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafId)
-  }, [isStreaming])
+    const from = posRef.current
+    const to = full.length
+    if (from >= to) return
+
+    const controls = animate(from, to, {
+      type: 'tween',
+      ease: 'linear',
+      duration: (to - from) / 60,
+      onUpdate: (latest) => {
+        const rounded = Math.round(latest)
+        posRef.current = rounded
+        setRevealed(targetRef.current.slice(0, rounded))
+      },
+    })
+
+    return () => controls.stop()
+  }, [isStreaming, displayContent])
 
   const contentToRender = !isStreaming ? displayContent : revealed
 
