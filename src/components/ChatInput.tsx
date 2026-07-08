@@ -376,7 +376,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
                         {categories.map((cat) => (
                           <DropdownMenuRadioItem key={cat.name} value={cat.name}>
                             <FolderOpen className="h-4 w-4" />
-                            <span>{cat.name}</span>
+                            <span className="capitalize">{cat.name}</span>
                           </DropdownMenuRadioItem>
                         ))}
                       </DropdownMenuRadioGroup>
