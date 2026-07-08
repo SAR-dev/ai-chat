@@ -327,22 +327,34 @@ export const useChatStore = create<ChatState>()((set, get) => ({
               }
             })
           },
-          onTitleUpdated: (data) => {
-            if (isNewChat && data.session_id) {
-              realSessionId = data.session_id
+          onSessionId: (sid) => {
+            if (isNewChat && sid && !realSessionId) {
+              realSessionId = sid
 
               const msgs = get().messagesBySessionId[tempKey] ?? []
               set((s) => {
                 const rest = { ...s.messagesBySessionId }
                 delete rest[tempKey]
                 return {
-                  messagesBySessionId: { ...rest, [data.session_id]: msgs },
-                  sessions: [{ id: data.session_id, title: data.session_title }, ...s.sessions],
-                  activeSessionId: data.session_id,
+                  messagesBySessionId: { ...rest, [sid]: msgs },
+                  sessions: [{ id: sid, title: 'New Chat' }, ...s.sessions],
+                  activeSessionId: sid,
                 }
               })
-              storageKey = data.session_id
-              onNewSession?.(data.session_id)
+              storageKey = sid
+              onNewSession?.(sid)
+            }
+          },
+          onTitleUpdated: (data) => {
+            if (isNewChat && data.session_id) {
+              // Update the title from a title_updated SSE event
+              set((s) => ({
+                sessions: s.sessions.map((sess) =>
+                  sess.id === data.session_id
+                    ? { ...sess, title: data.session_title }
+                    : sess,
+                ),
+              }))
             } else {
               set((s) => ({
                 sessions: s.sessions.map((sess) =>
@@ -490,6 +502,12 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       }
     }
 
+    // Refresh the session list so the correct server-side title
+    // shows up even when no `title_updated` event was received.
+    if (isNewChat && realSessionId) {
+      get().loadSessions().catch(() => {})
+    }
+
     return realSessionId ?? sessionId ?? ''
   },
 
@@ -545,8 +563,21 @@ export const useChatStore = create<ChatState>()((set, get) => ({
               }
             })
           },
+          onTitleUpdated: (data) => {
+            set((s) => ({
+              sessions: s.sessions.map((sess) =>
+                sess.id === data.session_id
+                  ? { ...sess, title: data.session_title }
+                  : sess,
+              ),
+            }))
+          },
           onSessionId: (sid) => {
             if (isNewChat && sid) {
+              // Guard: only migrate on the first session ID we receive
+              if (get().sessions.some((s) => s.id === sid)) {
+                return
+              }
               const msgs = get().messagesBySessionId[tempKey] ?? []
               set((s) => {
                 const rest = { ...s.messagesBySessionId }
@@ -615,6 +646,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       } else {
         set({ isStreaming: false, streamingMessageId: null })
       }
+    }
+
+    if (isNewChat) {
+      get().loadSessions().catch(() => {})
     }
   },
 

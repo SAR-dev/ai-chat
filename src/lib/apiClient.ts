@@ -240,12 +240,6 @@ async function streamFromURL(
           if (data.session_id) {
             callbacks.onSessionId?.(String(data.session_id))
           }
-          if (data.session_title && data.session_id) {
-            callbacks.onTitleUpdated?.({
-              session_title: data.session_title,
-              session_id: String(data.session_id),
-            })
-          }
           continue
         }
 
