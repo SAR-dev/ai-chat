@@ -1,11 +1,20 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 
 interface UseChatScrollOptions {
+  viewportRef: React.RefObject<HTMLDivElement | null>
+  // The inner content wrapper (the element that actually grows/shrinks as
+  // messages, images, and code blocks render). Falls back to viewportRef if
+  // omitted, but that won't detect growth since the viewport's own height
+  // is fixed by its container.
+  contentRef?: React.RefObject<HTMLDivElement | null>
   deps?: unknown[]
+  // A value that identifies the current conversation (e.g. sessionId).
+  // When this changes, scroll state is hard-reset and we snap to bottom,
+  // regardless of whether the user had scrolled up in the *previous* conversation.
+  resetKey?: string | number
 }
 
-export function useChatScroll({ deps = [] }: UseChatScrollOptions = {}) {
-  const scrollRef = useRef<HTMLDivElement>(null)
+export function useChatScroll({ viewportRef, contentRef, deps = [], resetKey }: UseChatScrollOptions) {
   const [isAtBottom, setIsAtBottom] = useState(true)
   const [showJumpButton, setShowJumpButton] = useState(false)
   const userScrolledUp = useRef(false)
@@ -13,14 +22,14 @@ export function useChatScroll({ deps = [] }: UseChatScrollOptions = {}) {
   const resizeObserver = useRef<ResizeObserver | null>(null)
 
   const checkIfAtBottom = useCallback(() => {
-    const el = scrollRef.current
+    const el = viewportRef.current
     if (!el) return true
     const threshold = 100
     return el.scrollHeight - el.scrollTop - el.clientHeight < threshold
-  }, [])
+  }, [viewportRef])
 
   const scrollToBottom = useCallback((smooth = true) => {
-    const el = scrollRef.current
+    const el = viewportRef.current
     if (!el) return
     el.scrollTo({
       top: el.scrollHeight,
@@ -29,10 +38,10 @@ export function useChatScroll({ deps = [] }: UseChatScrollOptions = {}) {
     userScrolledUp.current = false
     setShowJumpButton(false)
     setIsAtBottom(true)
-  }, [])
+  }, [viewportRef])
 
   useEffect(() => {
-    const el = scrollRef.current
+    const el = viewportRef.current
     if (!el) return
 
     const handleScroll = () => {
@@ -61,13 +70,17 @@ export function useChatScroll({ deps = [] }: UseChatScrollOptions = {}) {
       characterData: true,
     })
 
-    // ResizeObserver for container/dimension changes
+    // ResizeObserver for content growing/shrinking (e.g. late-loading images,
+    // code blocks, artifacts). Must observe the inner content wrapper, not the
+    // viewport itself — the viewport's height is fixed by its container, so it
+    // never fires when content grows inside it.
+    const resizeTarget = contentRef?.current ?? el
     resizeObserver.current = new ResizeObserver(() => {
       if (!userScrolledUp.current) {
         scrollToBottom(false)
       }
     })
-    resizeObserver.current.observe(el)
+    resizeObserver.current.observe(resizeTarget)
 
     return () => {
       el.removeEventListener('scroll', handleScroll)
@@ -77,6 +90,18 @@ export function useChatScroll({ deps = [] }: UseChatScrollOptions = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, checkIfAtBottom, scrollToBottom])
 
+  // Hard reset when switching conversations: a "scrolled up" state from the
+  // previous conversation must never carry over and suppress auto-scroll here.
+  useEffect(() => {
+    if (resetKey === undefined) return
+    userScrolledUp.current = false
+    setShowJumpButton(false)
+    setIsAtBottom(true)
+    // Snap (no smooth animation) once the new conversation's messages are in the DOM.
+    scrollToBottom(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetKey])
+
   // Auto-scroll when deps change (new messages etc)
   useEffect(() => {
     if (!userScrolledUp.current) {
@@ -85,5 +110,5 @@ export function useChatScroll({ deps = [] }: UseChatScrollOptions = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps])
 
-  return { scrollRef, isAtBottom, showJumpButton, scrollToBottom }
+  return { isAtBottom, showJumpButton, scrollToBottom }
 }

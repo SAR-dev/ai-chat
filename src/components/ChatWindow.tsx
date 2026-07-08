@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -14,6 +14,8 @@ interface ChatWindowProps {
 
 export default function ChatWindow({ sessionId }: ChatWindowProps) {
   const { t } = useTranslation()
+  const viewportRef = useRef<HTMLDivElement>(null!)
+  const contentRef = useRef<HTMLDivElement>(null!)
 
   const messages = useChatStore((s) => s.messagesBySessionId[sessionId]) ?? []
   const messagesStatus = useChatStore((s) => s.messagesStatus)
@@ -26,8 +28,11 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
   const streamingMessageId = useChatStore((s) => s.streamingMessageId)
   const loadMessages = useChatStore((s) => s.loadMessages)
 
-  const { scrollRef, showJumpButton, scrollToBottom } = useChatScroll({
+  const { showJumpButton, scrollToBottom } = useChatScroll({
+    viewportRef,
+    contentRef,
     deps: [messages, isStreaming, streamingContent],
+    resetKey: sessionId,
   })
 
   useEffect(() => {
@@ -59,8 +64,8 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
 
   return (
     <div className="relative min-h-0 min-w-0 flex-1">
-      <ScrollArea className="h-full" ref={scrollRef}>
-        <div className="mx-auto max-w-3xl py-4">
+      <ScrollArea className="h-full" viewportRef={viewportRef}>
+        <div ref={contentRef} className="mx-auto max-w-3xl py-4">
           {messages.map((msg) => (
             <ChatMessage
               key={msg.uuid}
