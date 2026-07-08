@@ -13,6 +13,7 @@ import type {
 } from '@/types'
 import * as api from '@/lib/apiClient'
 import { storeImages, getStoredImages } from '@/lib/imageStore'
+import { applyPinnedState, setSessionPinned, clearSessionPinned } from '@/lib/pinnedSessions'
 
 interface ChatState {
   sessions: ChatSessionSummary[]
@@ -114,8 +115,9 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     set({ sessionsStatus: 'loading' })
     try {
       const result = await api.fetchSessions(limit, offset)
+      const sessions = await applyPinnedState(result.sessions)
       set({
-        sessions: result.sessions,
+        sessions,
         sessionsStatus: 'idle',
         isEndOfHistory: result.count <= offset + limit,
       })
@@ -140,8 +142,9 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const offset = state.sessions.length
     try {
       const result = await api.fetchSessions(50, offset)
+      const newSessions = await applyPinnedState(result.sessions)
       set((s) => ({
-        sessions: [...s.sessions, ...result.sessions],
+        sessions: [...s.sessions, ...newSessions],
         isEndOfHistory: result.count <= offset + result.sessions.length,
       }))
     } catch {
@@ -155,6 +158,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     } catch {
       void 0
     }
+    await clearSessionPinned(id)
     set((state) => {
       const rest = { ...state.messagesBySessionId }
       delete rest[id]
@@ -172,6 +176,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     if (!session) return
     const newPinned = !session.pinned
 
+    // Pin state is managed entirely on the client (IndexedDB) — no API call.
     set((s) => ({
       sessions: s.sessions
         .map((sess) => (sess.id == id ? { ...sess, pinned: newPinned } : sess))
@@ -182,20 +187,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         }),
     }))
 
-    try {
-      await api.pinSessionApi(id, newPinned)
-    } catch {
-      // Roll back on failure
-      set((s) => ({
-        sessions: s.sessions
-          .map((sess) => (sess.id == id ? { ...sess, pinned: !newPinned } : sess))
-          .sort((a, b) => {
-            if (a.pinned && !b.pinned) return -1
-            if (!a.pinned && b.pinned) return 1
-            return 0
-          }),
-      }))
-    }
+    await setSessionPinned(id, newPinned)
   },
 
   setActiveSession: (id: string | null) => {
