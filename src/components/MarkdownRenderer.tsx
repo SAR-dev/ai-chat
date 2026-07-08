@@ -165,6 +165,24 @@ const components: Components = {
   pre({ children }) {
     return <>{children}</>
   },
+  h1({ children, ...props }) {
+    return <h1 className="my-4 text-xl font-bold" {...props}>{children}</h1>
+  },
+  h2({ children, ...props }) {
+    return <h2 className="my-4 text-lg font-bold" {...props}>{children}</h2>
+  },
+  h3({ children, ...props }) {
+    return <h3 className="my-4 text-base font-semibold" {...props}>{children}</h3>
+  },
+  h4({ children, ...props }) {
+    return <h4 className="my-3 text-sm font-semibold" {...props}>{children}</h4>
+  },
+  h5({ children, ...props }) {
+    return <h5 className="my-2 text-sm font-medium" {...props}>{children}</h5>
+  },
+  h6({ children, ...props }) {
+    return <h6 className="my-2 text-sm font-medium" {...props}>{children}</h6>
+  },
   code({ className, children, ...props }) {
     const isInline = !className
     const language = className?.replace('language-', '') ?? ''
@@ -264,7 +282,7 @@ const components: Components = {
   },
   table({ children, ...props }) {
     return (
-      <div className="overflow-x-auto">
+      <div className="my-4 overflow-x-auto">
         <table className="w-full border-collapse text-sm" {...props}>
           {children}
         </table>
