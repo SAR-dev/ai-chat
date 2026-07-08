@@ -229,12 +229,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       )
 
       set((state) => {
-        const exists = state.sessions.some((s) => s.id === sessionId)
-        const sessions = exists
+        const sessions = state.sessions.some((s) => s.id === sessionId)
           ? state.sessions.map((s) =>
               s.id === sessionId ? { ...s, title: result.session.title } : s,
             )
-          : [{ id: sessionId, title: result.session.title }, ...state.sessions]
+          : state.sessions
 
         return {
           messagesBySessionId: { ...state.messagesBySessionId, [sessionId]: messages },
