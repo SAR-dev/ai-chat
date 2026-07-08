@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
+import ArtifactRenderer from '@/components/ArtifactRenderer'
+import SlideDeckView from '@/components/SlideDeckView'
+import SlidePipelineStepper from '@/components/SlidePipelineStepper'
 import type { MessageState } from '@/types'
 import { cn } from '@/lib/utils'
 import {
@@ -15,6 +18,7 @@ import {
   Download,
 } from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
+import * as api from '@/lib/apiClient'
 import { toast } from 'sonner'
 
 interface ChatMessageProps {
@@ -57,14 +61,29 @@ export default function ChatMessage({
     }
   }
 
-  const handleDownload = () => {
-    const blob = new Blob([message.content], { type: 'text/markdown' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `message-${message.uuid.slice(0, 8)}.md`
-    a.click()
-    URL.revokeObjectURL(url)
+  const handleDownload = async () => {
+    try {
+      const blob = await api.downloadChat({
+        content: message.content,
+        format: 'docx',
+        filename: `message-${message.uuid.slice(0, 8)}.docx`,
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `message-${message.uuid.slice(0, 8)}.docx`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      // Fallback to markdown download
+      const blob = new Blob([message.content], { type: 'text/markdown' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `message-${message.uuid.slice(0, 8)}.md`
+      a.click()
+      URL.revokeObjectURL(url)
+    }
   }
 
   const handleFeedback = (isHelpful: boolean) => {
@@ -152,11 +171,11 @@ export default function ChatMessage({
           </div>
         ) : isUser ? (
           <div className="bg-secondary text-secondary-foreground min-w-0 rounded-2xl px-4 py-2.5 break-words">
-            <MarkdownRenderer content={displayContent} />
+            <MarkdownRenderer content={displayContent} sources={!isUser ? message.sources : undefined} />
           </div>
         ) : (
           <div className="min-w-0 break-words">
-            <MarkdownRenderer content={displayContent} />
+            <MarkdownRenderer content={displayContent} sources={message.sources} />
             {isStreaming && streamingContent === '' && (
               <span className="bg-primary inline-block h-3.5 w-1.5 animate-pulse rounded-full align-middle" />
             )}
@@ -182,15 +201,27 @@ export default function ChatMessage({
             )}
 
             {message.artifacts.length > 0 && (
-              <div className="mt-3 space-y-2">
+              <div className="mt-3 space-y-4">
                 {message.artifacts.map((artifact, i) => (
-                  <div key={i} className="border-border bg-card rounded-xl border p-3">
-                    <p className="text-sm font-medium">{artifact.title ?? String(artifact.type)}</p>
-                    <p className="text-muted-foreground text-xs">Artifact: {artifact.type}</p>
-                  </div>
+                  <ArtifactRenderer key={i} artifact={artifact} />
                 ))}
               </div>
             )}
+
+            {message.slideStatus && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="bg-primary h-3 w-3 animate-pulse rounded-full" />
+                {message.slideStatus}
+              </div>
+            )}
+
+            {Object.keys(message.slideStages).length > 0 && (
+              <SlidePipelineStepper stages={message.slideStages} />
+            )}
+
+            {message.slides.length > 0 && message.slides.map((deck, i) => (
+              <SlideDeckView key={i} deck={deck} />
+            ))}
           </div>
         )}
 

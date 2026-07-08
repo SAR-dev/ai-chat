@@ -125,9 +125,14 @@ export interface SourceLink {
 }
 
 export interface ArtifactData {
-  type: 'chart' | 'kpi' | 'table'
-  title?: string
+  artifact_type: 'chart' | 'kpi_card' | 'table'
   chart_type?: ChartType
+  title: string
+  subtitle?: string
+  data?: Array<{ name: string; [key: string]: string | number }>
+  series?: Array<{ key: string; label: string; color?: string; type?: string }>
+  kpis?: Array<{ label: string; value: string; unit?: string; change?: string; trend?: 'up' | 'down' | 'neutral' }>
+  config?: Record<string, unknown>
   [key: string]: unknown
 }
 
@@ -306,6 +311,7 @@ export interface FileAttachment {
 export interface MessageState {
   type: 'right' | 'left'
   content: string
+  tag: string
   cancelled: boolean
   agentTools: string[]
   agentReasoning: string

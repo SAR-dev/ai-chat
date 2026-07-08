@@ -9,8 +9,10 @@ import type {
   SourceLink,
   SlideStageId,
   SlideStageStatus,
+  Category,
 } from '@/types'
 import * as api from '@/lib/apiClient'
+import { storeImages, getStoredImages } from '@/lib/imageStore'
 
 interface ChatState {
   sessions: ChatSessionSummary[]
@@ -21,8 +23,11 @@ interface ChatState {
   sessionsStatus: 'idle' | 'loading' | 'error'
   messagesStatus: 'idle' | 'loading' | 'error'
   isEndOfHistory: boolean
+  categories: Category[]
+  categoriesStatus: 'idle' | 'loading' | 'error'
 
   loadSessions: (limit?: number, offset?: number) => Promise<void>
+  fetchCategories: () => Promise<void>
   loadMoreSessions: () => Promise<void>
   createSession: () => Promise<ChatSessionSummary>
   deleteSession: (id: string) => Promise<void>
@@ -58,6 +63,7 @@ interface ChatState {
   regenerateMessage: (sessionId: string, messageId: number) => Promise<void>
   editAndResend: (sessionId: string, fromMessageId: number, newContent: string) => Promise<void>
   submitFeedback: (messageId: number, isHelpful: boolean | null) => Promise<void>
+  regenerateSlide: (deckId: string, slideId: number, instruction: string) => Promise<void>
 }
 
 let abortController: AbortController | null = null
@@ -67,6 +73,7 @@ function createMessageState(role: 'user' | 'assistant', content = ''): MessageSt
   return {
     type: role === 'user' ? 'right' : 'left',
     content,
+    tag: '',
     cancelled: false,
     agentTools: [],
     agentReasoning: '',
@@ -94,6 +101,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   sessionsStatus: 'idle',
   messagesStatus: 'idle',
   isEndOfHistory: false,
+  categories: [],
+  categoriesStatus: 'idle',
 
   loadSessions: async (limit = 50, offset = 0) => {
     set({ sessionsStatus: 'loading' })
@@ -106,6 +115,16 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       })
     } catch {
       set({ sessionsStatus: 'error' })
+    }
+  },
+
+  fetchCategories: async () => {
+    set({ categoriesStatus: 'loading' })
+    try {
+      const categories = await api.fetchCategories()
+      set({ categories, categoriesStatus: 'idle' })
+    } catch {
+      set({ categoriesStatus: 'error' })
     }
   },
 
@@ -159,25 +178,32 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     set({ messagesStatus: 'loading' })
     try {
       const result = await api.fetchSession(sessionId)
-      const messages: MessageState[] = result.messages.map((msg) => ({
-        type: msg.role === 'user' ? 'right' : 'left',
-        content: msg.content,
-        cancelled: false,
-        agentTools: [],
-        agentReasoning: '',
-        imageStatus: '',
-        images: [],
-        slideStatus: '',
-        slideStages: {},
-        slides: [],
-        sources: msg.sources ?? [],
-        artifacts: msg.artifacts ?? [],
-        isRagMessage: result.session.category !== 'normalChat',
-        assistantMessageId: msg.id,
-        uuid: uuidv4(),
-        file: null,
-        dbId: msg.id,
-      }))
+      const categoryTag = result.session.category !== 'normalChat' ? result.session.category : ''
+      const messages: MessageState[] = await Promise.all(
+        result.messages.map(async (msg) => {
+          const stored = msg.role !== 'user' ? await getStoredImages(sessionId, msg.id) : null
+          return {
+            type: msg.role === 'user' ? 'right' : 'left',
+            content: msg.content,
+            tag: categoryTag,
+            cancelled: false,
+            agentTools: [],
+            agentReasoning: '',
+            imageStatus: '',
+            images: stored ?? [],
+            slideStatus: '',
+            slideStages: {},
+            slides: [],
+            sources: msg.sources ?? [],
+            artifacts: msg.artifacts ?? [],
+            isRagMessage: result.session.category !== 'normalChat',
+            assistantMessageId: msg.id,
+            uuid: uuidv4(),
+            file: null,
+            dbId: msg.id,
+          }
+        }),
+      )
 
       set((state) => ({
         messagesBySessionId: { ...state.messagesBySessionId, [sessionId]: messages },
@@ -191,6 +217,9 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   sendChatMessage: async (sessionId, message, opts) => {
     const state = get()
     const userMsg = createMessageState('user', message)
+    if (opts?.file) {
+      userMsg.file = { name: opts.file.name, type: opts.file.type, size: opts.file.size }
+    }
     const assistantMsg = createMessageState('assistant')
     assistantMsg.uuid = uuidv4()
 
@@ -216,6 +245,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
           internet_search: opts?.internet_search,
           slide_mode: opts?.slide_mode,
           agent_mode: opts?.agent_mode,
+          file: opts?.file,
         },
         {
           onToken: (token) => {
@@ -280,6 +310,12 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                   ? { ...m, images: [...m.images, image as GeneratedImage], imageStatus: '' }
                   : m,
               )
+              // Persist to IndexedDB
+              const streamingMsg = msgs.find((m) => m.uuid === s.streamingMessageId)
+              if (streamingMsg?.assistantMessageId) {
+                const currentImages = [...(streamingMsg.images as GeneratedImage[]), image as GeneratedImage]
+                storeImages(sessionId, streamingMsg.assistantMessageId, currentImages)
+              }
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
               }
@@ -345,11 +381,14 @@ export const useChatStore = create<ChatState>()((set, get) => ({
           onDone: (assistantMessageId) => {
             set((s) => {
               const msgs = s.messagesBySessionId[sessionId] ?? []
-              const updated = msgs.map((m) =>
-                m.uuid === s.streamingMessageId
-                  ? { ...m, assistantMessageId: assistantMessageId ?? null }
-                  : m,
-              )
+              const updated = msgs.map((m) => {
+                if (m.uuid !== s.streamingMessageId) return m
+                const msgId = assistantMessageId ?? null
+                if (msgId && m.images.length > 0) {
+                  storeImages(sessionId, msgId, m.images as GeneratedImage[])
+                }
+                return { ...m, assistantMessageId: msgId }
+              })
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
                 isStreaming: false,
@@ -362,7 +401,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       )
     } catch (e) {
       if ((e as Error).name === 'AbortError') {
-        // Mark the message as cancelled
         set((s) => {
           const msgs = s.messagesBySessionId[sessionId] ?? []
           const updated = msgs.map((m) =>
@@ -383,8 +421,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   sendRagMessage: async (sessionId, query, category, opts) => {
     const state = get()
     const userMsg = createMessageState('user', query)
+    userMsg.tag = category
     const assistantMsg = createMessageState('assistant')
     assistantMsg.isRagMessage = true
+    assistantMsg.tag = category
     assistantMsg.uuid = uuidv4()
 
     const existing = state.messagesBySessionId[sessionId] ?? []
@@ -442,11 +482,14 @@ export const useChatStore = create<ChatState>()((set, get) => ({
           onDone: (assistantMessageId) => {
             set((s) => {
               const msgs = s.messagesBySessionId[sessionId] ?? []
-              const updated = msgs.map((m) =>
-                m.uuid === s.streamingMessageId
-                  ? { ...m, assistantMessageId: assistantMessageId ?? null }
-                  : m,
-              )
+              const updated = msgs.map((m) => {
+                if (m.uuid !== s.streamingMessageId) return m
+                const msgId = assistantMessageId ?? null
+                if (msgId && m.images.length > 0) {
+                  storeImages(sessionId, msgId, m.images as GeneratedImage[])
+                }
+                return { ...m, assistantMessageId: msgId }
+              })
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [sessionId]: updated },
                 isStreaming: false,
@@ -529,6 +572,33 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   submitFeedback: async (messageId, isHelpful) => {
     try {
       await api.submitFeedback(messageId, { is_helpful: isHelpful })
+    } catch {
+      // ignore
+    }
+  },
+
+  regenerateSlide: async (deckId, slideId, instruction) => {
+    try {
+      const result = await api.regenerateSlide(deckId, slideId, { instruction })
+      // Update the slide HTML in the messages
+      set((state) => {
+        const updatedMsgs: Record<string, MessageState[]> = {}
+        for (const [sessionId, msgs] of Object.entries(state.messagesBySessionId)) {
+          updatedMsgs[sessionId] = msgs.map((msg) => ({
+            ...msg,
+            slides: msg.slides.map((deck) =>
+              deck.deckId === result.deck_id
+                ? {
+                    ...deck,
+                    html: result.html_fragment ?? deck.html,
+                    pptxUrl: result.pptx_url,
+                  }
+                : deck,
+            ),
+          }))
+        }
+        return { messagesBySessionId: updatedMsgs }
+      })
     } catch {
       // ignore
     }

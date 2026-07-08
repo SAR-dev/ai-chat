@@ -1,10 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import ChatMessage from '@/components/ChatMessage'
 import TypingIndicator from '@/components/TypingIndicator'
+import { useChatScroll } from '@/hooks/useChatScroll'
 import { useChatStore } from '@/stores/chatStore'
+import { ArrowDown } from 'lucide-react'
 
 interface ChatWindowProps {
   sessionId: string
@@ -12,13 +14,11 @@ interface ChatWindowProps {
 
 export default function ChatWindow({ sessionId }: ChatWindowProps) {
   const { t } = useTranslation()
-  const scrollRef = useRef<HTMLDivElement>(null)
 
   const messages = useChatStore((s) => s.messagesBySessionId[sessionId]) ?? []
   const messagesStatus = useChatStore((s) => s.messagesStatus)
   const isStreaming = useChatStore((s) => s.isStreaming)
   const streamingContent = useChatStore((s) => {
-    // Get content from the active streaming message
     const msgs = s.messagesBySessionId[sessionId] ?? []
     const streamingMsg = msgs.find((m) => m.uuid === s.streamingMessageId)
     return streamingMsg?.content ?? ''
@@ -26,15 +26,13 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
   const streamingMessageId = useChatStore((s) => s.streamingMessageId)
   const loadMessages = useChatStore((s) => s.loadMessages)
 
+  const { scrollRef, showJumpButton, scrollToBottom } = useChatScroll({
+    deps: [messages, isStreaming, streamingContent],
+  })
+
   useEffect(() => {
     loadMessages(sessionId)
   }, [sessionId, loadMessages])
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [messages, isStreaming, streamingContent])
 
   if (messagesStatus === 'loading') {
     return (
@@ -60,19 +58,30 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
   }
 
   return (
-    <ScrollArea className="min-h-0 min-w-0 flex-1" ref={scrollRef}>
-      <div className="mx-auto max-w-3xl py-4">
-        {messages.map((msg) => (
-          <ChatMessage
-            key={msg.uuid}
-            message={msg}
-            sessionId={sessionId}
-            isStreaming={msg.uuid === streamingMessageId}
-            streamingContent={msg.uuid === streamingMessageId ? streamingContent : undefined}
-          />
-        ))}
-        {isStreaming && streamingContent === '' && <TypingIndicator />}
-      </div>
-    </ScrollArea>
+    <div className="relative min-h-0 min-w-0 flex-1">
+      <ScrollArea className="h-full" ref={scrollRef}>
+        <div className="mx-auto max-w-3xl py-4">
+          {messages.map((msg) => (
+            <ChatMessage
+              key={msg.uuid}
+              message={msg}
+              sessionId={sessionId}
+              isStreaming={msg.uuid === streamingMessageId}
+              streamingContent={msg.uuid === streamingMessageId ? streamingContent : undefined}
+            />
+          ))}
+          {isStreaming && streamingContent === '' && <TypingIndicator />}
+        </div>
+      </ScrollArea>
+      {showJumpButton && (
+        <button
+          type="button"
+          onClick={() => scrollToBottom()}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 absolute right-4 bottom-4 flex h-8 w-8 items-center justify-center rounded-full shadow-lg transition-all"
+        >
+          <ArrowDown className="h-4 w-4" />
+        </button>
+      )}
+    </div>
   )
 }

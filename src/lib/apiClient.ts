@@ -91,6 +91,7 @@ async function streamFromURL(
   body: unknown,
   callbacks: SSEStreamCallbacks,
   signal?: AbortSignal,
+  isFormData = false,
 ): Promise<string> {
   const stored = localStorage.getItem(TOKEN_KEY)
   let token = ''
@@ -103,13 +104,14 @@ async function streamFromURL(
     }
   }
 
+  const headers: Record<string, string> = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  if (!isFormData) headers['Content-Type'] = 'application/json'
+
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
+    headers,
+    body: isFormData ? (body as FormData) : JSON.stringify(body),
     signal,
   })
 
@@ -258,6 +260,20 @@ export async function chatStream(
   signal?: AbortSignal,
 ): Promise<string> {
   const url = `${import.meta.env.VITE_API_BASE_URL ?? '/api'}/chat/stream`
+
+  if (data.file) {
+    const formData = new FormData()
+    formData.append('file', data.file)
+    formData.append('message', data.message)
+    if (data.session_id) formData.append('session_id', data.session_id)
+    if (data.mode) formData.append('mode', data.mode)
+    if (data.internet_search !== undefined) formData.append('internet_search', String(data.internet_search))
+    if (data.slide_mode) formData.append('slide_mode', data.slide_mode)
+    if (data.agent_mode !== undefined) formData.append('agent_mode', String(data.agent_mode))
+
+    return streamFromURL(url, formData, callbacks, signal, true)
+  }
+
   return streamFromURL(url, data, callbacks, signal)
 }
 

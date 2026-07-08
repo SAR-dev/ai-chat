@@ -1,7 +1,8 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
+import remarkEmoji from 'remark-emoji'
 import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeSlug from 'rehype-slug'
@@ -9,6 +10,8 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import type { Components } from 'react-markdown'
 import mermaid from 'mermaid'
 import { cn } from '@/lib/utils'
+import type { SourceLink } from '@/types'
+import { renderContentPipeline } from '@/utils/sourceLinks'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -28,6 +31,7 @@ function MermaidBlock({ code }: { code: string }) {
   const ref = useRef<HTMLDivElement>(null)
   const id = useId()
   const mermaidId = `mermaid-${id.replace(/[:$]/g, '')}`
+  const [svgContent, setSvgContent] = useState('')
 
   useEffect(() => {
     if (ref.current) {
@@ -36,6 +40,7 @@ function MermaidBlock({ code }: { code: string }) {
         .then(({ svg }) => {
           if (ref.current) {
             ref.current.innerHTML = svg
+            setSvgContent(svg)
           }
         })
         .catch(() => {
@@ -46,16 +51,134 @@ function MermaidBlock({ code }: { code: string }) {
     }
   }, [code, mermaidId])
 
-  return <div ref={ref} className="my-4 flex justify-center" />
+  const handleDownloadPng = async () => {
+    if (!svgContent) return
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' })
+    const url = URL.createObjectURL(blob)
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')
+      ctx?.drawImage(img, 0, 0)
+      canvas.toBlob((pngBlob) => {
+        if (!pngBlob) return
+        const pngUrl = URL.createObjectURL(pngBlob)
+        const a = document.createElement('a')
+        a.href = pngUrl
+        a.download = 'diagram.png'
+        a.click()
+        URL.revokeObjectURL(pngUrl)
+      }, 'image/png')
+      URL.revokeObjectURL(url)
+    }
+    img.src = url
+  }
+
+  return (
+    <div className="group relative my-4 flex justify-center">
+      <div ref={ref} />
+      {svgContent && (
+        <button
+          onClick={handleDownloadPng}
+          className="bg-background border-border hover:border-primary hover:text-primary absolute top-2 right-2 rounded-full border px-2.5 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          Download PNG
+        </button>
+      )}
+    </div>
+  )
+}
+
+function PlantUMLBlock({ code }: { code: string }) {
+  const encoded = btoa(code)
+  const url = `https://www.plantuml.com/plantuml/svg/${encodeURIComponent(encoded)}`
+
+  return (
+    <div className="my-4 flex justify-center">
+      <img src={url} alt="PlantUML Diagram" className="max-w-full rounded-lg" />
+    </div>
+  )
+}
+
+function HTMLPreviewBlock({ code }: { code: string }) {
+  return (
+    <div className="my-4 overflow-hidden rounded-xl border">
+      <iframe
+        srcDoc={code}
+        title="HTML Preview"
+        className="h-[300px] w-full"
+        sandbox="allow-scripts"
+      />
+    </div>
+  )
+}
+
+const LANGUAGE_ALIASES: Record<string, string> = {
+  js: 'JavaScript',
+  ts: 'TypeScript',
+  tsx: 'TypeScript React',
+  jsx: 'JavaScript React',
+  py: 'Python',
+  rb: 'Ruby',
+  rs: 'Rust',
+  go: 'Go',
+  java: 'Java',
+  cs: 'C#',
+  cpp: 'C++',
+  c: 'C',
+  swift: 'Swift',
+  kt: 'Kotlin',
+  scss: 'SCSS',
+  less: 'Less',
+  yml: 'YAML',
+  yaml: 'YAML',
+  mermaid: 'Mermaid',
+  plantuml: 'PlantUML',
+  html: 'HTML',
+  css: 'CSS',
+  sql: 'SQL',
+  sh: 'Shell',
+  bash: 'Bash',
+  json: 'JSON',
+  xml: 'XML',
+  md: 'Markdown',
+  dockerfile: 'Dockerfile',
+}
+
+const DOWNLOAD_EXTENSIONS: Record<string, string> = {
+  csv: 'csv',
+  tsv: 'tsv',
+  json: 'json',
+  xml: 'xml',
+  sql: 'sql',
+  yaml: 'yaml',
+  yml: 'yaml',
+  md: 'md',
+  text: 'txt',
+  sh: 'sh',
+  bash: 'sh',
 }
 
 const components: Components = {
+  pre({ children }) {
+    return <>{children}</>
+  },
   code({ className, children, ...props }) {
     const isInline = !className
     const language = className?.replace('language-', '') ?? ''
 
     if (language === 'mermaid') {
       return <MermaidBlock code={String(children).replace(/\n$/, '')} />
+    }
+
+    if (language === 'plantuml') {
+      return <PlantUMLBlock code={String(children).replace(/\n$/, '')} />
+    }
+
+    if (language === 'html') {
+      return <HTMLPreviewBlock code={String(children).replace(/\n$/, '')} />
     }
 
     if (isInline) {
@@ -69,21 +192,60 @@ const components: Components = {
       )
     }
 
+    const codeString = String(children).replace(/\n$/, '')
+    const lines = codeString.split('\n')
+    const langLabel = LANGUAGE_ALIASES[language] ?? language
+    const ext = DOWNLOAD_EXTENSIONS[language]
+
+    const handleDownload = () => {
+      const blob = new Blob([codeString], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `code.${ext ?? 'txt'}`
+      a.click()
+      URL.revokeObjectURL(url)
+    }
+
     return (
-      <div className="group relative">
-        <pre className="bg-muted border-border overflow-x-auto rounded-xl border p-4 text-sm">
-          <code className={cn('font-mono', className)} {...props}>
-            {children}
+      <div className="group my-4 overflow-hidden rounded-xl border">
+        {langLabel && (
+          <div className="bg-muted/50 border-border flex items-center justify-between border-b px-4 py-1.5">
+            <span className="text-muted-foreground text-xs font-medium">{langLabel}</span>
+            <div className="flex gap-1">
+              <button
+                className="text-muted-foreground hover:text-foreground text-xs"
+                onClick={() => {
+                  navigator.clipboard.writeText(codeString)
+                }}
+              >
+                Copy
+              </button>
+              {ext && (
+                <button
+                  className="text-muted-foreground hover:text-foreground text-xs"
+                  onClick={handleDownload}
+                >
+                  Download
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        <pre className="overflow-x-auto p-4 text-sm">
+          <code className={cn('font-mono', className)}>
+            {lines.length > 1
+              ? lines.map((line, i) => (
+                  <span key={i} className="table-row">
+                    <span className="text-muted-foreground/30 table-cell pr-4 text-right text-xs select-none">
+                      {i + 1}
+                    </span>
+                    <span className="table-cell">{line || ' '}</span>
+                  </span>
+                ))
+              : codeString}
           </code>
         </pre>
-        <button
-          className="bg-background border-border hover:border-primary hover:text-primary label-mono absolute top-2 right-2 rounded-full border px-2.5 py-1 opacity-0 transition-opacity group-hover:opacity-100"
-          onClick={() => {
-            navigator.clipboard.writeText(String(children).replace(/\n$/, ''))
-          }}
-        >
-          Copy
-        </button>
       </div>
     )
   },
@@ -132,20 +294,27 @@ const components: Components = {
   },
 }
 
-export default function MarkdownRenderer({ content }: { content: string }) {
+interface MarkdownRendererProps {
+  content: string
+  sources?: SourceLink[]
+}
+
+export default function MarkdownRenderer({ content, sources }: MarkdownRendererProps) {
+  const processed = renderContentPipeline(content, sources)
+
   return (
     <div className="prose prose-sm min-w-0 max-w-none break-words">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
+        remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
         rehypePlugins={[
           rehypeKatex,
-          rehypeHighlight,
+          [rehypeHighlight, { theme: 'github-dark' }],
           rehypeSlug,
           [rehypeAutolinkHeadings, { behavior: 'wrap' }],
         ]}
         components={components}
       >
-        {content}
+        {processed}
       </ReactMarkdown>
     </div>
   )

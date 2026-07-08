@@ -14,6 +14,7 @@ import {
   Brain,
   Presentation,
   Palette,
+  FolderOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDropzone } from 'react-dropzone'
@@ -78,6 +79,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
   const [isCreatingSession, setIsCreatingSession] = useState(false)
   const [mode, setMode] = useState<string>(MODES[0].id)
   const [slideStyle, setSlideStyle] = useState<string>(SLIDE_STYLES[0].id)
+  const [selectedCategory, setSelectedCategory] = useState<string>('normalChat')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const createSession = useChatStore((s) => s.createSession)
   const sendChatMessage = useChatStore((s) => s.sendChatMessage)
@@ -85,6 +87,12 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
   const stopStreaming = useChatStore((s) => s.stopStreaming)
   const isStreaming = useChatStore((s) => s.isStreaming)
   const isLoading = useChatStore((s) => s.messagesStatus === 'loading')
+  const categories = useChatStore((s) => s.categories)
+  const fetchCategories = useChatStore((s) => s.fetchCategories)
+
+  useEffect(() => {
+    fetchCategories()
+  }, [fetchCategories])
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles: PendingFile[] = acceptedFiles.map((file) => ({
@@ -149,9 +157,10 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
     }
 
     const modeVal = mode as 'fast' | 'thinking'
+    const cat = selectedCategory !== 'normalChat' ? selectedCategory : (category ?? 'normalChat')
 
-    if (category && category !== 'normalChat') {
-      await sendRagMessage(targetSessionId, content, category, {
+    if (cat && cat !== 'normalChat') {
+      await sendRagMessage(targetSessionId, content, cat, {
         mode: modeVal,
         top_k: '5',
       })
@@ -161,7 +170,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
         slide_mode: slideStyle as 'standard' | 'creative',
       })
     }
-  }, [input, pendingFiles, sessionId, createSession, navigate, sendChatMessage, sendRagMessage, mode, slideStyle, category])
+  }, [input, pendingFiles, sessionId, createSession, navigate, sendChatMessage, sendRagMessage, mode, slideStyle, category, selectedCategory])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -289,6 +298,24 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
                       )
                     })}
                   </DropdownMenuRadioGroup>
+                  {categories.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuRadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <DropdownMenuLabel>Category</DropdownMenuLabel>
+                        <DropdownMenuRadioItem value="normalChat">
+                          <Zap className="h-4 w-4" />
+                          <span>Normal Chat</span>
+                        </DropdownMenuRadioItem>
+                        {categories.map((cat) => (
+                          <DropdownMenuRadioItem key={cat.name} value={cat.name}>
+                            <FolderOpen className="h-4 w-4" />
+                            <span>{cat.name}</span>
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
