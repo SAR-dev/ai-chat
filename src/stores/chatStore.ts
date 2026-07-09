@@ -238,8 +238,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       set((state) => {
         const sessions = state.sessions.some((s) => s.id == sessionId)
           ? state.sessions.map((s) =>
-              s.id == sessionId ? { ...s, title: result.session.title } : s,
-            )
+            s.id == sessionId ? { ...s, title: result.session.title } : s,
+          )
           : state.sessions
 
         return {
@@ -323,20 +323,12 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             }
           },
           onTitleUpdated: (data) => {
-            if (isNewChat && data.session_id) {
-              // Update the title from a title_updated SSE event
-              set((s) => ({
-                sessions: s.sessions.map((sess) =>
-                  sess.id == data.session_id ? { ...sess, title: data.session_title } : sess,
-                ),
-              }))
-            } else {
-              set((s) => ({
-                sessions: s.sessions.map((sess) =>
-                  sess.id == sessionId ? { ...sess, title: data.session_title } : sess,
-                ),
-              }))
-            }
+            const targetId = data.session_id || realSessionId || storageKey
+            set((s) => ({
+              sessions: s.sessions.map((sess) =>
+                sess.id == targetId ? { ...sess, title: data.session_title } : sess,
+              ),
+            }))
           },
           onAgentTools: (data) => {
             set((s) => {
@@ -394,11 +386,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
               const updated = msgs.map((m) =>
                 m.uuid == s.streamingMessageId
                   ? {
-                      ...m,
-                      slides: [...m.slides, slide as unknown as SlideDeck],
-                      slideStatus: '',
-                      slideStages: {},
-                    }
+                    ...m,
+                    slides: [...m.slides, slide as unknown as SlideDeck],
+                    slideStatus: '',
+                    slideStages: {},
+                  }
                   : m,
               )
               return {
@@ -541,9 +533,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             })
           },
           onTitleUpdated: (data) => {
+            const targetId = data.session_id || storageKey
             set((s) => ({
               sessions: s.sessions.map((sess) =>
-                sess.id == data.session_id ? { ...sess, title: data.session_title } : sess,
+                sess.id == targetId ? { ...sess, title: data.session_title } : sess,
               ),
             }))
           },
@@ -721,10 +714,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             slides: msg.slides.map((deck) =>
               deck.deckId == result.deck_id
                 ? {
-                    ...deck,
-                    html: result.html_fragment ?? deck.html,
-                    pptxUrl: result.pptx_url,
-                  }
+                  ...deck,
+                  html: result.html_fragment ?? deck.html,
+                  pptxUrl: result.pptx_url,
+                }
                 : deck,
             ),
           }))

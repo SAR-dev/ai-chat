@@ -256,6 +256,8 @@ export interface SlideStatusEvent {
 export interface SSEDoneEvent {
   type: 'done'
   assistant_message_id?: number
+  session_title?: string
+  session_id?: string
 }
 
 export interface SSESlideEvent {

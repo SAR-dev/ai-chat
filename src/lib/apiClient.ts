@@ -226,12 +226,15 @@ async function streamFromURL(
       try {
         const data = JSON.parse(dataStr)
 
-        if (eventType == 'title_updated') {
-          callbacks.onTitleUpdated?.(data)
+        if (eventType == 'title_updated' || data.type == 'title_updated') {
+          callbacks.onTitleUpdated?.({
+            session_title: String(data.session_title ?? ''),
+            session_id: String(data.session_id ?? sessionId ?? ''),
+          })
           continue
         }
 
-        if (eventType == 'agent_tools') {
+        if (eventType == 'agent_tools' || data.type == 'agent_tools') {
           callbacks.onAgentTools?.(data)
           continue
         }
@@ -275,6 +278,12 @@ async function streamFromURL(
 
         if (data.type == 'done') {
           await drainQueue()
+          if (data.session_title) {
+            callbacks.onTitleUpdated?.({
+              session_title: String(data.session_title),
+              session_id: String(data.session_id ?? sessionId ?? ''),
+            })
+          }
           callbacks.onDone?.(data.assistant_message_id)
           continue
         }
