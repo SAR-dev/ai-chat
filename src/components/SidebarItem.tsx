@@ -51,7 +51,6 @@ export default function SidebarItem({
       onClick={onSelect}
     >
       <span className="flex-1 truncate">{session.title}</span>
-      {session.pinned && <Pin className="text-muted-foreground/40 h-3 w-3 shrink-0" />}
       <div className="invisible flex items-center gap-0.5 group-hover:visible">
         {onPinToggle && (
           <Button
