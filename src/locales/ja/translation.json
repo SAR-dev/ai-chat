@@ -113,6 +113,7 @@
     "slideStageSkipped": "スキップ",
     "error": "メッセージの送信に失敗しました。もう一度お試しください。",
     "retry": "再試行",
+    "startingChat": "チャットを開始しています...",
     "disclaimer": "KikuChatは間違えることがあります。Kikuma v-1.0.0 で動作しています。"
   },
   "settings": {

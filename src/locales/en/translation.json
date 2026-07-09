@@ -113,6 +113,7 @@
     "slideStageSkipped": "Skipped",
     "error": "Failed to send message. Please try again.",
     "retry": "Retry",
+    "startingChat": "Starting your chat...",
     "disclaimer": "KikuChat can make mistakes. Powered by Kikuma v-1.0.0."
   },
   "settings": {

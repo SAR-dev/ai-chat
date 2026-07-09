@@ -13,6 +13,7 @@ import type {
 } from '@/types'
 import * as api from '@/lib/apiClient'
 import { storeImages, getStoredImages } from '@/lib/imageStore'
+import { storeSlides, getStoredSlides } from '@/lib/slideStore'
 import { applyPinnedState, setSessionPinned, clearSessionPinned } from '@/lib/pinnedSessions'
 
 interface ChatState {
@@ -21,7 +22,6 @@ interface ChatState {
   activeSessionId: string | null
   isStreaming: boolean
   streamingMessageId: string | null
-  hasStreamingContent: boolean
   sessionsStatus: 'idle' | 'loading' | 'error'
   messagesStatus: 'idle' | 'loading' | 'error'
   isEndOfHistory: boolean
@@ -106,7 +106,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   activeSessionId: null,
   isStreaming: false,
   streamingMessageId: null,
-  hasStreamingContent: false,
   sessionsStatus: 'idle',
   messagesStatus: 'idle',
   isEndOfHistory: false,
@@ -206,13 +205,17 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       // for every message (e.g. a deck generated moments ago via the live
       // SSE stream may not have round-tripped to the DB and back yet), so
       // rather than reset to `[]` and make a just-generated deck vanish, we
-      // fall back to whatever slide data this message already has locally.
+      // fall back to whatever slide data this message already has locally,
+      // and beyond that to whatever was persisted to IndexedDB -- that's
+      // what survives a full page reload, when there's no in-memory state
+      // left to fall back to at all.
       const existingBySessionId = new Map(
         (get().messagesBySessionId[sessionId] ?? []).map((m) => [m.dbId, m]),
       )
       const messages: MessageState[] = await Promise.all(
         result.messages.map(async (msg) => {
           const stored = msg.role !== 'user' ? await getStoredImages(sessionId, msg.id) : null
+          const storedSlides = msg.role !== 'user' ? await getStoredSlides(sessionId, msg.id) : null
           const existing = existingBySessionId.get(msg.id)
           return {
             type: msg.role == 'user' ? 'right' : 'left',
@@ -225,7 +228,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             images: stored ?? [],
             slideStatus: '',
             slideStages: {},
-            slides: msg.slides ?? existing?.slides ?? [],
+            slides: msg.slides ?? existing?.slides ?? storedSlides ?? [],
             sources: msg.sources ?? [],
             artifacts: msg.artifacts ?? [],
             isRagMessage: result.session.category !== 'normalChat',
@@ -277,7 +280,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       },
       isStreaming: true,
       streamingMessageId: assistantMsg.uuid,
-      hasStreamingContent: false,
     })
 
     abortController = new AbortController()
@@ -304,7 +306,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
               )
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
-                hasStreamingContent: true,
               }
             })
           },
@@ -434,6 +435,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
           onDone: (assistantMessageId) => {
             const imagesToStore: { sessionId: string; msgId: number; images: GeneratedImage[] }[] =
               []
+            const slidesToStore: { sessionId: string; msgId: number; slides: SlideDeck[] }[] = []
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) => {
@@ -446,6 +448,13 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                     images: m.images as GeneratedImage[],
                   })
                 }
+                if (msgId && m.slides.length > 0) {
+                  slidesToStore.push({
+                    sessionId: storageKey,
+                    msgId,
+                    slides: m.slides,
+                  })
+                }
                 // `dbId` and `assistantMessageId` represent the same server
                 // id and must stay in sync -- loadMessages() looks messages
                 // up by `dbId` to preserve state (like just-generated slides)
@@ -456,11 +465,13 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
                 isStreaming: false,
                 streamingMessageId: null,
-                hasStreamingContent: false,
               }
             })
             for (const { sessionId: sid, msgId, images } of imagesToStore) {
               storeImages(sid, msgId, images)
+            }
+            for (const { sessionId: sid, msgId, slides } of slidesToStore) {
+              storeSlides(sid, msgId, slides)
             }
           },
         },
@@ -477,11 +488,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
             isStreaming: false,
             streamingMessageId: null,
-            hasStreamingContent: false,
           }
         })
       } else {
-        set({ isStreaming: false, streamingMessageId: null, hasStreamingContent: false })
+        set({ isStreaming: false, streamingMessageId: null })
       }
     }
 
@@ -510,7 +520,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       },
       isStreaming: true,
       streamingMessageId: assistantMsg.uuid,
-      hasStreamingContent: false,
     })
 
     abortController = new AbortController()
@@ -536,7 +545,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
               )
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
-                hasStreamingContent: true,
               }
             })
           },
@@ -604,7 +612,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
                 isStreaming: false,
                 streamingMessageId: null,
-                hasStreamingContent: false,
               }
             })
             for (const { sessionId: sid, msgId, images } of imagesToStore) {
@@ -625,11 +632,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
             isStreaming: false,
             streamingMessageId: null,
-            hasStreamingContent: false,
           }
         })
       } else {
-        set({ isStreaming: false, streamingMessageId: null, hasStreamingContent: false })
+        set({ isStreaming: false, streamingMessageId: null })
       }
     }
   },

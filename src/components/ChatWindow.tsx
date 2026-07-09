@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import ChatMessage from '@/components/ChatMessage'
-import TypingIndicator from '@/components/TypingIndicator'
 import { useChatScroll } from '@/hooks/useChatScroll'
 import { useChatStore } from '@/stores/chatStore'
 import { ArrowDown } from 'lucide-react'
@@ -20,7 +19,6 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
   const messages = useChatStore((s) => s.messagesBySessionId[sessionId]) ?? []
   const messagesStatus = useChatStore((s) => s.messagesStatus)
   const isStreaming = useChatStore((s) => s.isStreaming)
-  const hasStreamingContent = useChatStore((s) => s.hasStreamingContent)
   const streamingContent = useChatStore((s) => {
     const msgs = s.messagesBySessionId[sessionId] ?? []
     const streamingMsg = msgs.find((m) => m.uuid == s.streamingMessageId)
@@ -92,7 +90,6 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
               streamingContent={msg.uuid == streamingMessageId ? streamingContent : undefined}
             />
           ))}
-          {isStreaming && streamingContent == '' && !hasStreamingContent && <TypingIndicator />}
         </div>
       </ScrollArea>
       {showJumpButton && (

@@ -10,7 +10,7 @@ KikuChat is an AI chat application for Mass Holdings Ltd., powered by the "Kikum
 | **Build Tool**       | Vite 8                                                                              |
 | **Deployment**       | Docker + nginx (multi-stage build, SPA + API proxy)                                 |
 | **Routing**          | react-router-dom v7                                                                 |
-| **State Management** | Zustand 5 + IndexedDB (pinned sessions, generated images)                           |
+| **State Management** | Zustand 5 + IndexedDB (pinned sessions, generated images, slides)                   |
 | **Styling**          | Tailwind CSS 4 + Base/Lyra (shadcn/ui)                                              |
 | **Animation**        | Framer Motion 12                                                                    |
 | **Icons**            | Phosphor Icons (primary), Lucide React (supplemental)                               |
@@ -122,7 +122,7 @@ src/
     SlideDeckView.tsx         # Slide deck preview (iframe + fullscreen)
     SlideGenLoading.tsx       # Shimmer skeleton for slide generation
     SlidePipelineStepper.tsx  # Slide generation progress pipeline
-    TypingIndicator.tsx       # "Thinking..." animation
+    TypingIndicator.tsx       # "Thinking..." animation (rendered inside ChatMessage)
     theme-context.ts          # Theme context (light/dark/system) definition
     theme-provider.tsx        # Theme provider component
     use-theme.ts              # Theme consumer hook
@@ -148,6 +148,7 @@ src/
     apiClient.ts              # Axios client + SSE streaming + all API functions
     i18n.ts                   # i18next configuration (en/ja)
     imageStore.ts             # IndexedDB persistence for generated images
+    slideStore.ts             # IndexedDB persistence for generated slide decks
     pinnedSessions.ts         # IndexedDB persistence for pinned sessions
     utils.ts                  # cn() utility (clsx + tailwind-merge)
 
@@ -187,11 +188,11 @@ All routes except `/login` are wrapped in `<ProtectedRoute>` which redirects to 
 
 ### Data Flow
 
-1. **User input** is submitted via `ChatInput` (textarea, file upload, mode selectors)
+1. **User input** is submitted via `ChatInput` (textarea, file upload, mode selectors) or via suggestion buttons on `ChatPage`. When creating a new chat, `ChatPage` shows a loading overlay with spinner until the backend returns a session ID
 2. `chatStore.sendChatMessage()` or `sendRagMessage()` is called
 3. The store creates optimistic user + assistant messages and calls `apiClient.chatStream()` / `queryStream()`
 4. The SSE parser handles event types: `start`, `title_updated`, `agent_tools`, `artifact`, `image`, `image_status`, `slide`, `slide_status`, `sources`, `done`
-5. Text tokens are buffered with adaptive pacing (backlog-aware drip-feed) for smooth streaming
+5. Text tokens are buffered with adaptive pacing (backlog-aware drip-feed) for smooth streaming. Empty tokens are discarded, and the first non-empty token renders immediately to avoid a blank gap.
 6. Zustand state updates trigger React re-renders in `ChatWindow` → `ChatMessage` → `MarkdownRenderer` / `ArtifactRenderer` / `SlideDeckView`
 
 ### Authentication
@@ -203,14 +204,15 @@ All routes except `/login` are wrapped in `<ProtectedRoute>` which redirects to 
 
 ## Key Features
 
-- **AI Chat with SSE Streaming** — real-time streaming with adaptive token pacing (framer-motion text reveal)
+- **AI Chat with SSE Streaming** — real-time streaming with adaptive token pacing (framer-motion text reveal). TypingIndicator rendered inside the assistant message bubble for seamless transition from "Thinking..." to response content.
 - **Rich Markdown Rendering** — GFM, math (KaTeX `$...$` / `$$...$$`), diagrams (Mermaid, PlantUML), code highlighting (highlight.js), auto-linked headings, tables, emoji, inline HTML
 - **Data Artifacts** — charts (line, bar, pie, area, scatter, forecast, heatmap via Recharts), KPI cards, data tables
 - **Image Generation** — shimmer loading skeleton, zoom modal (keyboard-navigable gallery), download, IndexedDB persistence
-- **Slide Deck Generation** — 9-stage pipeline stepper, iframe preview, fullscreen mode, individual slide regeneration, PPTX download
+- **Slide Deck Generation** — 9-stage pipeline stepper, iframe preview, fullscreen mode, individual slide regeneration, PPTX download, IndexedDB persistence
 - **File Upload** — drag-and-drop (react-dropzone), file previews, type/size validation (10MB max)
 - **Agent Tools** — expandable agent activity section showing RAG search, web search, company KB search with reasoning
 - **Conversation Management** — create, delete, pin/unpin (client-side IndexedDB), search (Cmd+K)
+- **Send During Streaming** — textarea stays enabled during streaming so users can compose their next message. The send button is disabled while a response is in progress; pressing send is a no-op. ChatPage shows a "Starting your chat..." overlay when creating a new chat via suggestion buttons
 - **Message Actions** — copy, edit & resend, regenerate, thumbs up/down feedback, download as DOCX/MD
 - **Bilingual UI** — full English/Japanese localization with automatic language detection
 - **Responsive Design** — desktop (resizable sidebar panels) / mobile (drawer sidebar)

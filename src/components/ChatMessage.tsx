@@ -10,6 +10,7 @@ import ImageZoomModal from '@/components/ImageZoomModal'
 import SlideDeckView from '@/components/SlideDeckView'
 import SlidePipelineStepper from '@/components/SlidePipelineStepper'
 import SlideGenLoading from '@/components/SlideGenLoading'
+import TypingIndicator from '@/components/TypingIndicator'
 import type { MessageState } from '@/types'
 import { cn } from '@/lib/utils'
 import { Copy, Pencil, RefreshCw, ThumbsUp, ThumbsDown, Download } from 'lucide-react'
@@ -190,7 +191,11 @@ export default function ChatMessage({
           </div>
         ) : (
           <div className="min-w-0 break-words">
-            <MarkdownRenderer content={contentToRender} sources={message.sources} />
+            {isStreaming && contentToRender == '' ? (
+              <TypingIndicator />
+            ) : (
+              <MarkdownRenderer content={contentToRender} sources={message.sources} />
+            )}
 
             {message.sources.length > 0 && (
               <div className="mt-3 space-y-1">

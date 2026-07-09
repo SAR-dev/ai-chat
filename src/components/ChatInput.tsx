@@ -137,7 +137,7 @@ export default function ChatInput({
     [],
   )
 
-  const disabled = isStreaming || isLoading
+  const disabled = isLoading
 
   // Autofocus on mount / when switching conversations, and again once the
   // input re-enables after sending -- so the user can keep typing without
@@ -158,16 +158,7 @@ export default function ChatInput({
     })
   }, [])
 
-  const handleSend = useCallback(async () => {
-    const content = input.trim()
-    if (!content && pendingFiles.length == 0) return
-    setInput('')
-    setPendingFiles([])
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = `${MIN_TEXTAREA_HEIGHT}px`
-    }
-
+  const executeSend = useCallback(async (content: string) => {
     const modeVal = mode as 'fast' | 'thinking'
     const cat = selectedCategory !== 'normalChat' ? selectedCategory : (category ?? 'normalChat')
 
@@ -200,8 +191,6 @@ export default function ChatInput({
       )
     }
   }, [
-    input,
-    pendingFiles,
     sessionId,
     navigate,
     sendChatMessage,
@@ -212,6 +201,26 @@ export default function ChatInput({
     agentMode,
     category,
     selectedCategory,
+  ])
+
+  const handleSend = useCallback(async () => {
+    if (isStreaming) return
+
+    const content = input.trim()
+    if (!content && pendingFiles.length == 0) return
+
+    setInput('')
+    setPendingFiles([])
+    if (textareaRef.current) {
+      textareaRef.current.style.height = `${MIN_TEXTAREA_HEIGHT}px`
+    }
+
+    await executeSend(content)
+  }, [
+    input,
+    pendingFiles,
+    isStreaming,
+    executeSend,
   ])
 
   const handleKeyDown = useCallback(
@@ -233,7 +242,7 @@ export default function ChatInput({
     [onDrop],
   )
 
-  const canSend = !disabled && (input.trim().length > 0 || pendingFiles.length > 0)
+  const canSend = !disabled && !isStreaming && (input.trim().length > 0 || pendingFiles.length > 0)
   const isHero = variant == 'hero'
   const activeMode = MODES.find((m) => m.id == mode) ?? MODES[0]
   const activeSlideStyle = SLIDE_STYLES.find((s) => s.id == slideStyle) ?? SLIDE_STYLES[0]
@@ -256,6 +265,7 @@ export default function ChatInput({
           </div>
         )}
         <input {...getInputProps()} />
+
         <FilePreview files={pendingFiles} onRemove={removeFile} className="mb-2" />
 
         <div
