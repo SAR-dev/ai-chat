@@ -40,10 +40,12 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
   useEffect(() => {
     setActiveSession(sessionId)
     // Skip loading when a stream is in progress — the store has already been
-    // populated with optimistic + in-flight messages.  Once the stream ends
-    // `isStreaming` flips to false and this effect re-runs, fetching the
-    // complete conversation (and the real title) from the server.
-    if (!isStreaming) {
+    // populated with optimistic + in-flight messages.
+    // Also skip when messages already exist to avoid re-fetching after
+    // streaming completes, which causes all message keys to change and
+    // triggers a full DOM remount (flicker).
+    const existing = useChatStore.getState().messagesBySessionId[sessionId]
+    if (!isStreaming && (!existing || existing.length === 0)) {
       loadMessages(sessionId)
     }
   }, [sessionId, loadMessages, setActiveSession, isStreaming])
@@ -82,7 +84,7 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
         <div ref={contentRef} className="mx-auto max-w-3xl py-4">
           {messages.map((msg) => (
             <ChatMessage
-              key={msg.uuid}
+              key={msg.dbId ?? msg.uuid}
               message={msg}
               sessionId={sessionId}
               isStreaming={msg.uuid == streamingMessageId}
