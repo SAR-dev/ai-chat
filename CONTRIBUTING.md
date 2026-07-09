@@ -62,9 +62,9 @@ services:
       args:
         VITE_API_BASE_URL: /api
     ports:
-      - "80:80"
+      - '80:80'
     extra_hosts:
-      - "backend:192.168.1.100"
+      - 'backend:192.168.1.100'
 ```
 
 **Login:** Use `demo@example.com` with any password (the app connects to a real backend at `http://192.168.25.219:81/api` by default). To point to a different backend, update `VITE_API_BASE_URL` in `.env`.
