@@ -158,50 +158,53 @@ export default function ChatInput({
     })
   }, [])
 
-  const executeSend = useCallback(async (content: string) => {
-    const modeVal = mode as 'fast' | 'thinking'
-    const cat = selectedCategory !== 'normalChat' ? selectedCategory : (category ?? 'normalChat')
+  const executeSend = useCallback(
+    async (content: string) => {
+      const modeVal = mode as 'fast' | 'thinking'
+      const cat = selectedCategory !== 'normalChat' ? selectedCategory : (category ?? 'normalChat')
 
-    if (cat && cat !== 'normalChat') {
-      const newSessionId = sessionId ?? null
-      await sendRagMessage(
-        newSessionId,
-        content,
-        cat,
-        {
-          mode: modeVal,
-          top_k: '5',
-          internet_search: internetSearch,
-          agent_mode: agentMode,
-        },
-        newSessionId == null ? (id) => navigate(`/chat/${id}`) : undefined,
-      )
-    } else {
-      const targetSessionId = sessionId ?? null
-      await sendChatMessage(
-        targetSessionId,
-        content,
-        {
-          mode: modeVal,
-          slide_mode: slideStyle as 'standard' | 'creative',
-          internet_search: internetSearch,
-          agent_mode: agentMode,
-        },
-        targetSessionId == null ? (id) => navigate(`/chat/${id}`) : undefined,
-      )
-    }
-  }, [
-    sessionId,
-    navigate,
-    sendChatMessage,
-    sendRagMessage,
-    mode,
-    slideStyle,
-    internetSearch,
-    agentMode,
-    category,
-    selectedCategory,
-  ])
+      if (cat && cat !== 'normalChat') {
+        const newSessionId = sessionId ?? null
+        await sendRagMessage(
+          newSessionId,
+          content,
+          cat,
+          {
+            mode: modeVal,
+            top_k: '5',
+            internet_search: internetSearch,
+            agent_mode: agentMode,
+          },
+          newSessionId == null ? (id) => navigate(`/chat/${id}`) : undefined,
+        )
+      } else {
+        const targetSessionId = sessionId ?? null
+        await sendChatMessage(
+          targetSessionId,
+          content,
+          {
+            mode: modeVal,
+            slide_mode: slideStyle as 'standard' | 'creative',
+            internet_search: internetSearch,
+            agent_mode: agentMode,
+          },
+          targetSessionId == null ? (id) => navigate(`/chat/${id}`) : undefined,
+        )
+      }
+    },
+    [
+      sessionId,
+      navigate,
+      sendChatMessage,
+      sendRagMessage,
+      mode,
+      slideStyle,
+      internetSearch,
+      agentMode,
+      category,
+      selectedCategory,
+    ],
+  )
 
   const handleSend = useCallback(async () => {
     if (isStreaming) return
@@ -216,12 +219,7 @@ export default function ChatInput({
     }
 
     await executeSend(content)
-  }, [
-    input,
-    pendingFiles,
-    isStreaming,
-    executeSend,
-  ])
+  }, [input, pendingFiles, isStreaming, executeSend])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
