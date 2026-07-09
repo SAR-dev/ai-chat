@@ -1,13 +1,7 @@
 'use client'
 
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
-import {
-  CheckCircle,
-  Info,
-  TriangleAlert,
-  XCircle,
-  Loader,
-} from 'lucide-react'
+import { CheckCircle, Info, TriangleAlert, XCircle, Loader } from 'lucide-react'
 
 const Toaster = ({ ...props }: ToasterProps) => {
   return (

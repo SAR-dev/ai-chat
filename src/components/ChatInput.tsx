@@ -71,7 +71,12 @@ const ALLOWED_TYPES = [
 const MIN_TEXTAREA_HEIGHT = 56
 const MAX_TEXTAREA_HEIGHT = 200
 
-export default function ChatInput({ sessionId, variant = 'default', className, category }: ChatInputProps) {
+export default function ChatInput({
+  sessionId,
+  variant = 'default',
+  className,
+  category,
+}: ChatInputProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const rawId = useId()
@@ -194,7 +199,20 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
         targetSessionId == null ? (id) => navigate(`/chat/${id}`) : undefined,
       )
     }
-  }, [input, pendingFiles, sessionId, navigate, sendChatMessage, sendRagMessage, mode, slideStyle, internetSearch, agentMode, category, selectedCategory])
+  }, [
+    input,
+    pendingFiles,
+    sessionId,
+    navigate,
+    sendChatMessage,
+    sendRagMessage,
+    mode,
+    slideStyle,
+    internetSearch,
+    agentMode,
+    category,
+    selectedCategory,
+  ])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -225,7 +243,11 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
   return (
     <div
       {...getRootProps()}
-      className={cn('bg-background px-4 pt-2 pb-4', isHero && 'bg-transparent px-0 py-0', className)}
+      className={cn(
+        'bg-background px-4 pt-2 pb-4',
+        isHero && 'bg-transparent px-0 py-0',
+        className,
+      )}
     >
       <div className={cn('mx-auto max-w-3xl', isHero && 'max-w-2xl')}>
         {isDragActive && (
@@ -238,7 +260,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
 
         <div
           className={cn(
-            'border-border bg-card focus-within:border-primary/60 focus-within:ring-primary/15 border shadow-sm transition-all focus-within:ring-4 rounded-lg',
+            'border-border bg-card focus-within:border-primary/60 focus-within:ring-primary/15 rounded-lg border shadow-sm transition-all focus-within:ring-4',
             isDragActive && 'border-primary/60 ring-primary/15 ring-4',
             isHero && 'shadow-md',
           )}
@@ -367,7 +389,10 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
                   {categories.length > 0 && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuRadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <DropdownMenuRadioGroup
+                        value={selectedCategory}
+                        onValueChange={setSelectedCategory}
+                      >
                         <DropdownMenuLabel>Category</DropdownMenuLabel>
                         <DropdownMenuRadioItem value="normalChat">
                           <Zap className="h-4 w-4" />
@@ -411,9 +436,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
           </div>
         </div>
 
-        <p className="text-muted-foreground/70 mt-2 text-center text-xs">
-          {t('chat.disclaimer')}
-        </p>
+        <p className="text-muted-foreground/70 mt-2 text-center text-xs">{t('chat.disclaimer')}</p>
       </div>
     </div>
   )

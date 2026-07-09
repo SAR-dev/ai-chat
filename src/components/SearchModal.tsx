@@ -77,7 +77,10 @@ export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
           const title = session?.title ?? sessionId
           const start = Math.max(0, idx - 40)
           const end = Math.min(msg.content.length, idx + q.length + 40)
-          const snippet = (start > 0 ? '…' : '') + msg.content.slice(start, end) + (end < msg.content.length ? '…' : '')
+          const snippet =
+            (start > 0 ? '…' : '') +
+            msg.content.slice(start, end) +
+            (end < msg.content.length ? '…' : '')
           addResult(sessionId, title, snippet)
           break
         }
@@ -116,7 +119,7 @@ export default function SearchModal({ open, onOpenChange }: SearchModalProps) {
             <button
               key={result.sessionId}
               type="button"
-              className="flex w-full flex-col gap-0.5 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
+              className="hover:bg-accent flex w-full flex-col gap-0.5 rounded-lg px-3 py-2.5 text-left text-sm"
               onClick={() => handleSelect(result.sessionId)}
             >
               <span className="font-medium">{result.title}</span>

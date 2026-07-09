@@ -116,7 +116,9 @@ export default function SlideDeckView({ deck }: SlideDeckViewProps) {
               onClick={() => handleRegenerate(i)}
               className="text-xs"
             >
-              <RefreshCw className={`mr-1 h-3 w-3 ${regeneratingSlide == i ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`mr-1 h-3 w-3 ${regeneratingSlide == i ? 'animate-spin' : ''}`}
+              />
               Slide {i + 1}
             </Button>
           ))}

@@ -54,13 +54,13 @@ export default function ImageZoomModal({ images, index, onOpenChange }: ImageZoo
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent
         overlayClassName="bg-black/80"
-        className="top-0 left-0 h-dvh w-dvw max-w-none sm:max-w-none translate-x-0 translate-y-0 flex items-center justify-center border-0 bg-transparent p-0 shadow-none ring-0 backdrop-blur-none"
+        className="top-0 left-0 flex h-dvh w-dvw max-w-none translate-x-0 translate-y-0 items-center justify-center border-0 bg-transparent p-0 shadow-none ring-0 backdrop-blur-none sm:max-w-none"
         showCloseButton={false}
       >
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          className="text-white/70 hover:text-white absolute top-3 right-3 z-20 rounded-full bg-black/40 p-1.5 backdrop-blur-sm transition-colors hover:bg-black/60"
+          className="absolute top-3 right-3 z-20 rounded-full bg-black/40 p-1.5 text-white/70 backdrop-blur-sm transition-colors hover:bg-black/60 hover:text-white"
         >
           <X className="h-5 w-5" />
         </button>
@@ -69,7 +69,7 @@ export default function ImageZoomModal({ images, index, onOpenChange }: ImageZoo
           <Button
             variant="secondary"
             size="icon-sm"
-            className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 text-white/90 shadow-sm backdrop-blur-sm transition-colors hover:bg-black/60 hover:text-white"
+            className="absolute top-1/2 left-3 z-10 -translate-y-1/2 rounded-full bg-black/40 text-white/90 shadow-sm backdrop-blur-sm transition-colors hover:bg-black/60 hover:text-white"
             onClick={goPrev}
           >
             <ChevronLeft className="h-5 w-5" />
@@ -86,26 +86,24 @@ export default function ImageZoomModal({ images, index, onOpenChange }: ImageZoo
           <Button
             variant="secondary"
             size="icon-sm"
-            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 text-white/90 shadow-sm backdrop-blur-sm transition-colors hover:bg-black/60 hover:text-white"
+            className="absolute top-1/2 right-3 z-10 -translate-y-1/2 rounded-full bg-black/40 text-white/90 shadow-sm backdrop-blur-sm transition-colors hover:bg-black/60 hover:text-white"
             onClick={goNext}
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
         )}
 
-        <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 flex items-center gap-3 rounded-full bg-black/40 px-4 py-2 backdrop-blur-sm">
-          {image.caption && (
-            <p className="text-white/90 truncate text-sm">{image.caption}</p>
-          )}
+        <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3 rounded-full bg-black/40 px-4 py-2 backdrop-blur-sm">
+          {image.caption && <p className="truncate text-sm text-white/90">{image.caption}</p>}
           {hasMultiple && (
-            <span className="text-white/70 text-xs">
+            <span className="text-xs text-white/70">
               {current + 1} / {images.length}
             </span>
           )}
           <button
             type="button"
             onClick={handleDownload}
-            className="text-white/70 hover:text-white transition-colors"
+            className="text-white/70 transition-colors hover:text-white"
           >
             <Download className="h-4 w-4" />
           </button>

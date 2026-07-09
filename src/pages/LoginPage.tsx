@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-
 import LoginGraphicPanel from '@/components/LoginGraphicPanel'
 import BrandMark from '@/components/BrandMark'
 import { useAuthStore } from '@/stores/authStore'
@@ -68,14 +67,13 @@ export default function LoginPage() {
 
       <div className="flex w-full flex-col items-center justify-center px-4 py-10 sm:py-12">
         <div className="w-full max-w-[380px]">
-          {/* Mobile-only brand header; the desktop side panel covers this role on lg+ */}
           <div className="mb-8 flex flex-col items-center gap-2 lg:hidden">
             <BrandMark className="h-10 w-10" />
             <span className="text-foreground text-sm font-semibold">{t('app.name')}</span>
           </div>
 
           <div className="mb-8 flex flex-col items-center gap-3 text-center lg:items-start lg:text-left">
-            <span className="border border-accent text-accent-foreground inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium">
+            <span className="border-accent text-accent-foreground inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
               <Building2 className="h-3.5 w-3.5" />
               {t('login.internalNotice')}
             </span>
@@ -84,7 +82,9 @@ export default function LoginPage() {
                 {t(isAd ? 'login.titleAd' : 'login.title')}
               </h1>
 
-              <p className="text-muted-foreground/80 text-sm">{t(isAd ? 'login.descriptionAd' : 'login.kiwiHint')}</p>
+              <p className="text-muted-foreground/80 text-sm">
+                {t(isAd ? 'login.descriptionAd' : 'login.kiwiHint')}
+              </p>
             </div>
           </div>
 
@@ -124,7 +124,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-muted-foreground hover:text-foreground absolute right-3.5 top-1/2 -translate-y-1/2"
+                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3.5 -translate-y-1/2"
                     tabIndex={-1}
                     aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                   >
@@ -143,7 +143,13 @@ export default function LoginPage() {
                 disabled={isLoading}
               >
                 {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoading ? (isAd ? t('login.loggingInAd') : t('login.loggingIn')) : (isAd ? t('login.signInAd') : t('login.signIn'))}
+                {isLoading
+                  ? isAd
+                    ? t('login.loggingInAd')
+                    : t('login.loggingIn')
+                  : isAd
+                    ? t('login.signInAd')
+                    : t('login.signIn')}
               </Button>
             </form>
 
@@ -156,10 +162,11 @@ export default function LoginPage() {
                 {isAd ? t('login.loginWithUsername') : t('login.backToAd')}
               </button>
             </div>
-
           </div>
 
-          <p className="text-muted-foreground/70 mt-4 text-center text-xs">{t('login.contactAdmin')}</p>
+          <p className="text-muted-foreground/70 mt-4 text-center text-xs">
+            {t('login.contactAdmin')}
+          </p>
 
           <div className="mt-6 flex justify-center">
             <div className="bg-muted inline-flex rounded-md p-0.5">
@@ -167,7 +174,9 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleLanguageChange('en')}
                 className={`cursor-pointer rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                  language == 'en' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                  language == 'en'
+                    ? 'bg-background text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 EN
@@ -176,7 +185,9 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleLanguageChange('ja')}
                 className={`cursor-pointer rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                  language == 'ja' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                  language == 'ja'
+                    ? 'bg-background text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 JA
@@ -189,8 +200,6 @@ export default function LoginPage() {
           {t('login.footerRights', { year: new Date().getFullYear() })}
         </p>
       </div>
-
-
     </div>
   )
 }

@@ -37,8 +37,6 @@ export default function LoginGraphicPanel() {
       <Sparkles />
 
       <div className="relative flex flex-1 flex-col justify-center gap-10 px-14 py-14">
-
-        {/* Mascot + speech bubble */}
         <div className="flex items-start gap-3">
           <img
             src="/vectors/welcome-wave.svg"
@@ -59,7 +57,6 @@ export default function LoginGraphicPanel() {
           {t('login.heroTagline')}
         </p>
 
-        {/* Feature list */}
         <div className="bg-card/90 border-border w-full max-w-sm space-y-5 rounded-2xl border p-6 shadow-sm">
           {FEATURES.map(({ icon: FeatureIcon, titleKey, descKey }) => (
             <div key={titleKey} className="flex items-start gap-3">
@@ -75,7 +72,6 @@ export default function LoginGraphicPanel() {
         </div>
       </div>
 
-      {/* Trust footer */}
       <div className="border-border/60 relative flex items-center gap-3 border-t px-14 py-6">
         <span className="bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
           <Lock className="h-4 w-4" />

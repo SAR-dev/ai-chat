@@ -9,12 +9,6 @@ interface MascotProps {
   style?: CSSProperties
 }
 
-/**
- * Chattie -- the app's bear mascot. A single reusable SVG with a shared body
- * and swappable face / arms / props so every expression stays visually
- * consistent. Colors come from the current theme (`--primary`) so it stays
- * in sync with the app's color palette.
- */
 export default function Mascot({ expression = 'happy', className, style }: MascotProps) {
   return (
     <svg
@@ -25,20 +19,16 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
       role="img"
       aria-label={`Chattie the mascot, ${expression}`}
     >
-      {/* Ears */}
       <circle cx="62" cy="46" r="24" className="fill-primary" />
       <circle cx="138" cy="46" r="24" className="fill-primary" />
       <circle cx="62" cy="48" r="10" className="fill-primary-foreground" />
       <circle cx="138" cy="48" r="10" className="fill-primary-foreground" />
 
-      {/* Body */}
       <rect x="30" y="40" width="140" height="150" rx="62" className="fill-primary" />
 
-      {/* Feet */}
       <ellipse cx="72" cy="196" rx="20" ry="14" className="fill-primary" />
       <ellipse cx="128" cy="196" rx="20" ry="14" className="fill-primary" />
 
-      {/* Face */}
       {expression == 'excited' ? (
         <>
           <path
@@ -63,11 +53,9 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
         </>
       )}
 
-      {/* Snout */}
       <ellipse cx="100" cy="122" rx="26" ry="20" className="fill-primary-foreground" />
       <ellipse cx="100" cy="112" rx="7" ry="5" className="fill-primary" />
 
-      {/* Mouth */}
       {expression == 'thinking' ? (
         <path
           d="M90 130 Q100 122 110 130"
@@ -86,7 +74,6 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
         />
       )}
 
-      {/* Arms */}
       {expression == 'happy' && (
         <path
           d="M164 132 Q178 118 172 100"
@@ -142,7 +129,6 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
         </>
       )}
 
-      {/* Expression props */}
       {expression == 'thinking' && (
         <text x="150" y="60" className="fill-primary" fontSize="30" fontWeight="600">
           ?

@@ -36,7 +36,9 @@ export const useAuthStore = create<AuthState>()(
       login: async (username: string, password: string, ad = false) => {
         set({ status: 'loading', error: null })
         try {
-          const res = ad ? await api.loginAD({ username, password }) : await api.login({ username, password })
+          const res = ad
+            ? await api.loginAD({ username, password })
+            : await api.login({ username, password })
           setStoredToken(res.token)
           set({ user: res.user, token: res.token, status: 'idle' })
         } catch (e) {
@@ -50,7 +52,6 @@ export const useAuthStore = create<AuthState>()(
         set({ status: 'loading', error: null })
         try {
           await api.register({ username, password, email })
-          // Auto-login after registration
           await get().login(username, password)
         } catch (e) {
           const message = e instanceof Error ? e.message : 'Registration failed'

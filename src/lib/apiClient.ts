@@ -75,7 +75,13 @@ export interface SSEStreamCallbacks {
   onTitleUpdated?: (data: { session_title: string; session_id: string }) => void
   onAgentTools?: (data: { tools: string[]; reasoning?: string }) => void
   onArtifact?: (artifact: Record<string, unknown>) => void
-  onImage?: (image: { b64: string; prompt?: string; caption?: string; width?: number; height?: number }) => void
+  onImage?: (image: {
+    b64: string
+    prompt?: string
+    caption?: string
+    width?: number
+    height?: number
+  }) => void
   onImageStatus?: (message: string) => void
   onSlide?: (slide: Record<string, unknown>) => void
   onSlideStatus?: (data: { stage: string; stage_status: string; message?: string }) => void
@@ -274,7 +280,13 @@ async function streamFromURL(
         }
 
         const tokenText =
-          data.content ?? data.chunk ?? data.delta ?? data.reply ?? data.answer ?? data.full_text ?? null
+          data.content ??
+          data.chunk ??
+          data.delta ??
+          data.reply ??
+          data.answer ??
+          data.full_text ??
+          null
         if (tokenText !== null) {
           pushToken(String(tokenText))
           continue
@@ -282,7 +294,6 @@ async function streamFromURL(
 
         if (typeof data == 'string') {
           pushToken(data)
-          continue
         }
       } catch {
         pushToken(dataStr)
@@ -307,7 +318,8 @@ export async function chatStream(
     formData.append('file', data.file)
     formData.append('message', data.message)
     if (data.mode) formData.append('mode', data.mode)
-    if (data.internet_search !== undefined) formData.append('internet_search', String(data.internet_search))
+    if (data.internet_search !== undefined)
+      formData.append('internet_search', String(data.internet_search))
     if (data.slide_mode) formData.append('slide_mode', data.slide_mode)
     if (data.agent_mode !== undefined) formData.append('agent_mode', String(data.agent_mode))
 
@@ -333,7 +345,10 @@ export async function downloadChat(data: ChatDownloadRequest): Promise<Blob> {
   return res.data
 }
 
-export async function fetchSessions(limit?: number, offset?: number): Promise<SessionHistoryResponse> {
+export async function fetchSessions(
+  limit?: number,
+  offset?: number,
+): Promise<SessionHistoryResponse> {
   const params: Record<string, string> = {}
   if (limit !== undefined) params.limit = String(limit)
   if (offset !== undefined) params.offset = String(offset)

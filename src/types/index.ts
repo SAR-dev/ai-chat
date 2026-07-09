@@ -1,5 +1,3 @@
-// ── Request types ──
-
 export interface LoginPayload {
   username: string
   password: string
@@ -47,8 +45,6 @@ export interface UserSettings {
 export interface SlideRegenerateRequest {
   instruction: string
 }
-
-// ── Response types ──
 
 export interface User {
   id: number
@@ -99,8 +95,6 @@ export interface RagChatResponse {
   request_id?: string
 }
 
-// ── Session types ──
-
 export interface ChatSessionSummary {
   id: string
   title: string
@@ -132,7 +126,13 @@ export interface ArtifactData {
   subtitle?: string
   data?: Array<{ name: string; [key: string]: string | number }>
   series?: Array<{ key: string; label: string; color?: string; type?: string }>
-  kpis?: Array<{ label: string; value: string; unit?: string; change?: string; trend?: 'up' | 'down' | 'neutral' }>
+  kpis?: Array<{
+    label: string
+    value: string
+    unit?: string
+    change?: string
+    trend?: 'up' | 'down' | 'neutral'
+  }>
   config?: Record<string, unknown>
   [key: string]: unknown
 }
@@ -205,13 +205,9 @@ export interface FeedbackResponse {
   cache_invalidated: boolean
 }
 
-// ── Settings ──
-
 export interface GetUserSettingsResponse {
   agent_enabled: boolean
 }
-
-// ── Slides ──
 
 export interface RegenerateSlideResponse {
   deck_id: string
@@ -219,8 +215,6 @@ export interface RegenerateSlideResponse {
   html_fragment: string | null
   pptx_url: string
 }
-
-// ── Request management ──
 
 export interface CancelRequestResponse {
   message: string
@@ -239,13 +233,9 @@ export interface ActiveRequest {
   created_at: string
 }
 
-// ── Categories ──
-
 export interface Category {
   name: string
 }
-
-// ── SSE event types ──
 
 export interface TitleUpdatedEvent {
   session_title: string
@@ -293,15 +283,11 @@ export interface SSESourcesEvent {
   sources: SourceLink[]
 }
 
-// ── Download ──
-
 export interface ChatDownloadRequest {
   content: string
   format: 'docx'
   filename: string
 }
-
-// ── Client-side MessageState (UI rendering state) ──
 
 export interface FileAttachment {
   name: string

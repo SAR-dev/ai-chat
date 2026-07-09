@@ -7,9 +7,6 @@ interface SlideGenLoadingProps {
   status: string
 }
 
-// A mock slide (title bar, bullet skeletons, image block) rather than a
-// generic centered spinner -- the loading state should look like the thing
-// it's actually building.
 export default function SlideGenLoading({ status }: SlideGenLoadingProps) {
   const { t } = useTranslation()
   const label = translateStatus(status, t).replace(/[.\u2026\s]+$/, '')

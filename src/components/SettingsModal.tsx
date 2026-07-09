@@ -7,12 +7,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/authStore'
@@ -75,7 +70,9 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
         {user && (
           <div className="flex items-center gap-3 border-b pb-4">
             <Avatar>
-              <AvatarFallback>{(user.display_name ?? user.username).charAt(0).toUpperCase()}</AvatarFallback>
+              <AvatarFallback>
+                {(user.display_name ?? user.username).charAt(0).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
               <span className="text-sm font-medium">{user.display_name ?? user.username}</span>
@@ -95,7 +92,9 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
             <Label>{t('settings.language')}</Label>
             <Select value={currentLang} onValueChange={handleLanguageChange}>
               <SelectTrigger className="w-full">
-                <span>{currentLang == 'en' ? t('settings.languageEn') : t('settings.languageJa')}</span>
+                <span>
+                  {currentLang == 'en' ? t('settings.languageEn') : t('settings.languageJa')}
+                </span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="en">{t('settings.languageEn')}</SelectItem>

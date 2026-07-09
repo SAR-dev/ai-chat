@@ -8,7 +8,6 @@
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
 
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
@@ -16,14 +15,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Path alias */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
     "ignoreDeprecations": "6.0",
 
-    /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,

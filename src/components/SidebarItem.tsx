@@ -51,15 +51,16 @@ export default function SidebarItem({
       onClick={onSelect}
     >
       <span className="flex-1 truncate">{session.title}</span>
-      {session.pinned && (
-        <Pin className="text-muted-foreground/40 h-3 w-3 shrink-0" />
-      )}
+      {session.pinned && <Pin className="text-muted-foreground/40 h-3 w-3 shrink-0" />}
       <div className="invisible flex items-center gap-0.5 group-hover:visible">
         {onPinToggle && (
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={(e) => { e.stopPropagation(); onPinToggle() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onPinToggle()
+            }}
             title={session.pinned ? t('sidebar.unpin') : t('sidebar.pin')}
           >
             <Pin className={cn('h-3 w-3', session.pinned && 'fill-current')} />
@@ -67,9 +68,7 @@ export default function SidebarItem({
         )}
         <AlertDialog>
           <AlertDialogTrigger
-            render={
-              <Button variant="ghost" size="icon-sm" onClick={(e) => e.stopPropagation()} />
-            }
+            render={<Button variant="ghost" size="icon-sm" onClick={(e) => e.stopPropagation()} />}
           >
             <Trash2 className="h-3 w-3" />
           </AlertDialogTrigger>

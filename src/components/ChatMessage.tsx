@@ -12,14 +12,7 @@ import SlidePipelineStepper from '@/components/SlidePipelineStepper'
 import SlideGenLoading from '@/components/SlideGenLoading'
 import type { MessageState } from '@/types'
 import { cn } from '@/lib/utils'
-import {
-  Copy,
-  Pencil,
-  RefreshCw,
-  ThumbsUp,
-  ThumbsDown,
-  Download,
-} from 'lucide-react'
+import { Copy, Pencil, RefreshCw, ThumbsUp, ThumbsDown, Download } from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
 import * as api from '@/lib/apiClient'
 import { toast } from 'sonner'
@@ -32,17 +25,13 @@ interface ChatMessageProps {
 }
 
 export default function ChatMessage({
-                                      message,
-                                      sessionId,
-                                      isStreaming,
-                                      streamingContent,
-                                    }: ChatMessageProps) {
+  message,
+  sessionId,
+  isStreaming,
+  streamingContent,
+}: ChatMessageProps) {
   const { t } = useTranslation()
   const isUser = message.type == 'right'
-  // Pacing already happens upstream in apiClient.ts (adaptive token drip-feed
-  // into the store). Re-animating the reveal again here at a fixed rate would
-  // just override that pacing with a constant speed — so we render whatever
-  // content we're given directly instead of re-typewriting it a second time.
   const displayContent = isStreaming ? (streamingContent ?? '') : message.content
   const [isEditing, setIsEditing] = useState(false)
 
@@ -86,7 +75,6 @@ export default function ChatMessage({
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      // Fallback to markdown download
       const blob = new Blob([message.content], { type: 'text/markdown' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -108,9 +96,7 @@ export default function ChatMessage({
     <div className={cn('group px-4 py-3 sm:px-6', isUser && 'flex justify-end')}>
       <div className={cn('min-w-0', isUser ? 'max-w-[80%]' : 'w-full')}>
         {message.cancelled && (
-          <div className="text-muted-foreground mb-2 text-xs italic">
-            Request cancelled
-          </div>
+          <div className="text-muted-foreground mb-2 text-xs italic">Request cancelled</div>
         )}
 
         {message.agentTools.length > 0 && (
@@ -121,11 +107,17 @@ export default function ChatMessage({
               </summary>
               <div className="mt-2 space-y-1">
                 {message.agentTools.map((tool) => (
-                  <span key={tool} className="bg-accent text-accent-foreground mr-1 inline-block rounded px-1.5 py-0.5 text-xs">
+                  <span
+                    key={tool}
+                    className="bg-accent text-accent-foreground mr-1 inline-block rounded px-1.5 py-0.5 text-xs"
+                  >
                     {tool == 'rag_search' && '🔍 RAG Search'}
                     {tool == 'web_search' && '🌐 Web Search'}
                     {tool == 'company_kb_search' && '📚 Company KB Search'}
-                    {tool !== 'rag_search' && tool !== 'web_search' && tool !== 'company_kb_search' && `🧰 Tool: ${tool}`}
+                    {tool !== 'rag_search' &&
+                      tool !== 'web_search' &&
+                      tool !== 'company_kb_search' &&
+                      `🧰 Tool: ${tool}`}
                   </span>
                 ))}
                 {message.agentReasoning && (
@@ -191,7 +183,10 @@ export default function ChatMessage({
           </div>
         ) : isUser ? (
           <div className="bg-secondary text-secondary-foreground min-w-0 rounded-2xl px-4 py-2.5 break-words">
-            <MarkdownRenderer content={displayContent} sources={!isUser ? message.sources : undefined} />
+            <MarkdownRenderer
+              content={displayContent}
+              sources={!isUser ? message.sources : undefined}
+            />
           </div>
         ) : (
           <div className="min-w-0 break-words">
@@ -199,7 +194,7 @@ export default function ChatMessage({
 
             {message.sources.length > 0 && (
               <div className="mt-3 space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">Sources:</p>
+                <p className="text-muted-foreground text-xs font-medium">Sources:</p>
                 <ol className="list-inside list-decimal space-y-0.5 text-xs">
                   {message.sources.map((source) => (
                     <li key={source.index}>
@@ -225,17 +220,14 @@ export default function ChatMessage({
               </div>
             )}
 
-            {message.slideStatus && (
-              <SlideGenLoading status={message.slideStatus} />
-            )}
+            {message.slideStatus && <SlideGenLoading status={message.slideStatus} />}
 
             {Object.keys(message.slideStages).length > 0 && (
               <SlidePipelineStepper stages={message.slideStages} />
             )}
 
-            {message.slides.length > 0 && message.slides.map((deck, i) => (
-              <SlideDeckView key={i} deck={deck} />
-            ))}
+            {message.slides.length > 0 &&
+              message.slides.map((deck, i) => <SlideDeckView key={i} deck={deck} />)}
           </div>
         )}
 

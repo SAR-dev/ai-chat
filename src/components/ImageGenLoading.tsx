@@ -7,13 +7,6 @@ interface ImageGenLoadingProps {
   status: string
 }
 
-/**
- * Loading state shown while an image is being generated. A shimmering
- * skeleton frame stands in for the image-to-be, with a softly breathing
- * icon at its center and a status line whose trailing dots animate in
- * sequence -- calmer than a generic spinner, and it previews the shape
- * the final image will land in.
- */
 export default function ImageGenLoading({ status }: ImageGenLoadingProps) {
   const { t } = useTranslation()
   const label = translateStatus(status, t).replace(/[.\u2026\s]+$/, '')

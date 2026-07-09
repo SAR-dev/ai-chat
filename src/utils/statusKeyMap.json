@@ -1,0 +1,9 @@
+{
+  "画像を生成しています": "chat.imageStatusGenerating",
+  "画像を仕上げています": "chat.imageStatusFinalizing",
+  "generating image": "chat.imageStatusGenerating",
+  "finalizing image": "chat.imageStatusFinalizing",
+
+  "スライドを生成しています": "chat.slideStatusGenerating",
+  "generating slides": "chat.slideStatusGenerating"
+}

@@ -24,8 +24,7 @@ function KpiCard({ kpi }: { kpi: NonNullable<ArtifactData['kpis']>[number] }) {
       : kpi.trend == 'down'
         ? 'text-red-600'
         : 'text-muted-foreground'
-  const trendIcon =
-    kpi.trend == 'up' ? '↑' : kpi.trend == 'down' ? '↓' : '→'
+  const trendIcon = kpi.trend == 'up' ? '↑' : kpi.trend == 'down' ? '↓' : '→'
 
   return (
     <div className="border-border bg-card rounded-xl border p-4">
@@ -49,11 +48,15 @@ function TableView({ artifact }: { artifact: ArtifactData }) {
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr>
-            {artifact.data?.[0] && Object.keys(artifact.data[0]).map((col) => (
-              <th key={col} className="border-border bg-muted label-mono border px-3 py-2 text-left">
-                {col}
-              </th>
-            ))}
+            {artifact.data?.[0] &&
+              Object.keys(artifact.data[0]).map((col) => (
+                <th
+                  key={col}
+                  className="border-border bg-muted label-mono border px-3 py-2 text-left"
+                >
+                  {col}
+                </th>
+              ))}
           </tr>
         </thead>
         <tbody>
@@ -80,9 +83,8 @@ function ChartView({ artifact }: { artifact: ArtifactData }) {
 
   if (data.length == 0) return null
 
-  const dataKeys = series.length > 0
-    ? series.map((s) => s.key)
-    : Object.keys(data[0]).filter((k) => k !== 'name')
+  const dataKeys =
+    series.length > 0 ? series.map((s) => s.key) : Object.keys(data[0]).filter((k) => k !== 'name')
 
   const renderCharts = () => {
     switch (chartType) {
@@ -170,7 +172,10 @@ function ChartView({ artifact }: { artifact: ArtifactData }) {
         )
       case 'heatmap':
         return (
-          <div className="grid gap-px" style={{ gridTemplateColumns: `repeat(${data.length}, 1fr)` }}>
+          <div
+            className="grid gap-px"
+            style={{ gridTemplateColumns: `repeat(${data.length}, 1fr)` }}
+          >
             {data.map((row, i) => {
               const val = Number(row[dataKeys[0] ?? 'value']) || 0
               const opacity = Math.min(val / 100, 1)
@@ -204,7 +209,10 @@ export default function ArtifactRenderer({ artifact }: { artifact: ArtifactData 
 
   if (artifactType == 'kpi_card' && artifact.kpis) {
     return (
-      <div className="my-3 grid gap-3" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(180px, 1fr))` }}>
+      <div
+        className="my-3 grid gap-3"
+        style={{ gridTemplateColumns: `repeat(auto-fill, minmax(180px, 1fr))` }}
+      >
         {artifact.kpis.map((kpi, i) => (
           <KpiCard key={i} kpi={kpi} />
         ))}

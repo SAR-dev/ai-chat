@@ -238,8 +238,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       set((state) => {
         const sessions = state.sessions.some((s) => s.id == sessionId)
           ? state.sessions.map((s) =>
-            s.id == sessionId ? { ...s, title: result.session.title } : s,
-          )
+              s.id == sessionId ? { ...s, title: result.session.title } : s,
+            )
           : state.sessions
 
         return {
@@ -297,9 +297,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid == s.streamingMessageId
-                  ? { ...m, content: m.content + token }
-                  : m,
+                m.uuid == s.streamingMessageId ? { ...m, content: m.content + token } : m,
               )
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
@@ -329,9 +327,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
               // Update the title from a title_updated SSE event
               set((s) => ({
                 sessions: s.sessions.map((sess) =>
-                  sess.id == data.session_id
-                    ? { ...sess, title: data.session_title }
-                    : sess,
+                  sess.id == data.session_id ? { ...sess, title: data.session_title } : sess,
                 ),
               }))
             } else {
@@ -385,9 +381,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid == s.streamingMessageId
-                  ? { ...m, imageStatus: message }
-                  : m,
+                m.uuid == s.streamingMessageId ? { ...m, imageStatus: message } : m,
               )
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
@@ -399,7 +393,12 @@ export const useChatStore = create<ChatState>()((set, get) => ({
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
                 m.uuid == s.streamingMessageId
-                  ? { ...m, slides: [...m.slides, slide as unknown as SlideDeck], slideStatus: '', slideStages: {} }
+                  ? {
+                      ...m,
+                      slides: [...m.slides, slide as unknown as SlideDeck],
+                      slideStatus: '',
+                      slideStages: {},
+                    }
                   : m,
               )
               return {
@@ -429,9 +428,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid == s.streamingMessageId
-                  ? { ...m, sources: sources as SourceLink[] }
-                  : m,
+                m.uuid == s.streamingMessageId ? { ...m, sources: sources as SourceLink[] } : m,
               )
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
@@ -439,14 +436,19 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             })
           },
           onDone: (assistantMessageId) => {
-            const imagesToStore: { sessionId: string; msgId: number; images: GeneratedImage[] }[] = []
+            const imagesToStore: { sessionId: string; msgId: number; images: GeneratedImage[] }[] =
+              []
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) => {
                 if (m.uuid !== s.streamingMessageId) return m
                 const msgId = assistantMessageId ?? null
                 if (msgId && m.images.length > 0) {
-                  imagesToStore.push({ sessionId: storageKey, msgId, images: m.images as GeneratedImage[] })
+                  imagesToStore.push({
+                    sessionId: storageKey,
+                    msgId,
+                    images: m.images as GeneratedImage[],
+                  })
                 }
                 // `dbId` and `assistantMessageId` represent the same server
                 // id and must stay in sync -- loadMessages() looks messages
@@ -531,9 +533,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid == s.streamingMessageId
-                  ? { ...m, content: m.content + token }
-                  : m,
+                m.uuid == s.streamingMessageId ? { ...m, content: m.content + token } : m,
               )
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
@@ -543,9 +543,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
           onTitleUpdated: (data) => {
             set((s) => ({
               sessions: s.sessions.map((sess) =>
-                sess.id == data.session_id
-                  ? { ...sess, title: data.session_title }
-                  : sess,
+                sess.id == data.session_id ? { ...sess, title: data.session_title } : sess,
               ),
             }))
           },
@@ -573,9 +571,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) =>
-                m.uuid == s.streamingMessageId
-                  ? { ...m, sources: sources as SourceLink[] }
-                  : m,
+                m.uuid == s.streamingMessageId ? { ...m, sources: sources as SourceLink[] } : m,
               )
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
@@ -583,14 +579,19 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             })
           },
           onDone: (assistantMessageId) => {
-            const imagesToStore: { sessionId: string; msgId: number; images: GeneratedImage[] }[] = []
+            const imagesToStore: { sessionId: string; msgId: number; images: GeneratedImage[] }[] =
+              []
             set((s) => {
               const msgs = s.messagesBySessionId[storageKey] ?? []
               const updated = msgs.map((m) => {
                 if (m.uuid !== s.streamingMessageId) return m
                 const msgId = assistantMessageId ?? null
                 if (msgId && m.images.length > 0) {
-                  imagesToStore.push({ sessionId: storageKey, msgId, images: m.images as GeneratedImage[] })
+                  imagesToStore.push({
+                    sessionId: storageKey,
+                    msgId,
+                    images: m.images as GeneratedImage[],
+                  })
                 }
                 // `dbId` and `assistantMessageId` represent the same server
                 // id and must stay in sync -- loadMessages() looks messages
@@ -628,7 +629,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         set({ isStreaming: false, streamingMessageId: null })
       }
     }
-
   },
 
   stopStreaming: () => {
@@ -721,10 +721,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             slides: msg.slides.map((deck) =>
               deck.deckId == result.deck_id
                 ? {
-                  ...deck,
-                  html: result.html_fragment ?? deck.html,
-                  pptxUrl: result.pptx_url,
-                }
+                    ...deck,
+                    html: result.html_fragment ?? deck.html,
+                    pptxUrl: result.pptx_url,
+                  }
                 : deck,
             ),
           }))

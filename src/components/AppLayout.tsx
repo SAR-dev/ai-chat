@@ -13,7 +13,6 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-svh w-full">
-      {/* Mobile: Sheet-based sidebar (always expanded -- collapsing only matters on desktop) */}
       <div className="md:hidden">
         <Sheet>
           <SheetTrigger
@@ -29,7 +28,6 @@ export default function AppLayout() {
         </Sheet>
       </div>
 
-      {/* Desktop sidebar: fixed icon rail when collapsed, resizable panel when expanded */}
       <div className="hidden h-full flex-1 md:flex">
         {sidebarCollapsed ? (
           <>

@@ -5,17 +5,6 @@
 @import '@fontsource-variable/inter';
 @import 'katex/dist/katex.min.css';
 
-/*
-  Design identity: warm, quiet, editorial -- the calm workspace look of a
-  well-known AI assistant, re-keyed around a navy signal color instead of
-  its usual warm accent. Background is a soft warm paper tone rather than
-  clinical white or gray; text is a warm near-black rather than pure #000.
-  Corners are generously rounded, chrome is quiet, and the navy primary is
-  reserved for the handful of moments that need it: the send button, the
-  active state, links. Everything else stays neutral so the conversation
-  is the thing you look at.
-*/
-
 :root {
   --background: #faf9f6;
   --foreground: #262624;
@@ -97,7 +86,6 @@
 }
 
 @layer utilities {
-  /* Small uppercase micro-label, used sparingly for section eyebrows. */
   .label-mono {
     font-family: var(--font-sans);
     font-size: 0.6875rem;

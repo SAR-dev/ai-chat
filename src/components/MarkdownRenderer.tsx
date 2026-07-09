@@ -167,14 +167,20 @@ const components: Components = {
   },
   h1({ children, ...props }) {
     return (
-      <h1 className="mt-8 mb-3 text-2xl font-semibold tracking-tight first:mt-0 [&_a]:no-underline" {...props}>
+      <h1
+        className="mt-8 mb-3 text-2xl font-semibold tracking-tight first:mt-0 [&_a]:no-underline"
+        {...props}
+      >
         {children}
       </h1>
     )
   },
   h2({ children, ...props }) {
     return (
-      <h2 className="mt-7 mb-3 text-xl font-semibold tracking-tight first:mt-0 [&_a]:no-underline" {...props}>
+      <h2
+        className="mt-7 mb-3 text-xl font-semibold tracking-tight first:mt-0 [&_a]:no-underline"
+        {...props}
+      >
         {children}
       </h2>
     )
@@ -202,7 +208,10 @@ const components: Components = {
   },
   h6({ children, ...props }) {
     return (
-      <h6 className="text-muted-foreground mt-4 mb-2 text-sm font-semibold first:mt-0 [&_a]:no-underline" {...props}>
+      <h6
+        className="text-muted-foreground mt-4 mb-2 text-sm font-semibold first:mt-0 [&_a]:no-underline"
+        {...props}
+      >
         {children}
       </h6>
     )
@@ -216,21 +225,27 @@ const components: Components = {
   },
   ul({ children, ...props }) {
     return (
-      <ul className="marker:text-muted-foreground my-3 list-disc space-y-1.5 pl-6 first:mt-0 last:mb-0" {...props}>
+      <ul
+        className="marker:text-muted-foreground my-3 list-disc space-y-1.5 pl-6 first:mt-0 last:mb-0"
+        {...props}
+      >
         {children}
       </ul>
     )
   },
   ol({ children, ...props }) {
     return (
-      <ol className="marker:text-muted-foreground my-3 list-decimal space-y-1.5 pl-6 first:mt-0 last:mb-0" {...props}>
+      <ol
+        className="marker:text-muted-foreground my-3 list-decimal space-y-1.5 pl-6 first:mt-0 last:mb-0"
+        {...props}
+      >
         {children}
       </ol>
     )
   },
   li({ children, ...props }) {
     return (
-      <li className="leading-7 pl-1 [&>ol]:my-1 [&>p]:my-0 [&>ul]:my-1" {...props}>
+      <li className="pl-1 leading-7 [&>ol]:my-1 [&>p]:my-0 [&>ul]:my-1" {...props}>
         {children}
       </li>
     )
@@ -338,13 +353,13 @@ const components: Components = {
           <code className={cn('font-mono', className)}>
             {lines.length > 1
               ? lines.map((line, i) => (
-                <span key={i} className="table-row">
+                  <span key={i} className="table-row">
                     <span className="text-muted-foreground/30 table-cell pr-4 text-right text-xs select-none">
                       {i + 1}
                     </span>
                     <span className="table-cell">{line || ' '}</span>
                   </span>
-              ))
+                ))
               : codeString}
           </code>
         </pre>
@@ -373,14 +388,20 @@ const components: Components = {
   },
   th({ children, ...props }) {
     return (
-      <th className="bg-muted label-mono border-border border-b px-3 py-2 text-left font-semibold" {...props}>
+      <th
+        className="bg-muted label-mono border-border border-b px-3 py-2 text-left font-semibold"
+        {...props}
+      >
         {children}
       </th>
     )
   },
   td({ children, ...props }) {
     return (
-      <td className="border-border border-b px-3 py-2 [tbody_tr:last-child_&]:border-b-0" {...props}>
+      <td
+        className="border-border border-b px-3 py-2 [tbody_tr:last-child_&]:border-b-0"
+        {...props}
+      >
         {children}
       </td>
     )
@@ -406,7 +427,7 @@ export default function MarkdownRenderer({ content, sources }: MarkdownRendererP
   const processed = renderContentPipeline(content, sources)
 
   return (
-    <div className="prose prose-sm min-w-0 max-w-none break-words">
+    <div className="prose prose-sm max-w-none min-w-0 break-words">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
         rehypePlugins={[

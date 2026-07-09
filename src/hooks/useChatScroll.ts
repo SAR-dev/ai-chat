@@ -14,7 +14,12 @@ interface UseChatScrollOptions {
   resetKey?: string | number
 }
 
-export function useChatScroll({ viewportRef, contentRef, deps = [], resetKey }: UseChatScrollOptions) {
+export function useChatScroll({
+  viewportRef,
+  contentRef,
+  deps = [],
+  resetKey,
+}: UseChatScrollOptions) {
   const [isAtBottom, setIsAtBottom] = useState(true)
   const [showJumpButton, setShowJumpButton] = useState(false)
   const userScrolledUp = useRef(false)
@@ -28,17 +33,20 @@ export function useChatScroll({ viewportRef, contentRef, deps = [], resetKey }: 
     return el.scrollHeight - el.scrollTop - el.clientHeight < threshold
   }, [viewportRef])
 
-  const scrollToBottom = useCallback((smooth = true) => {
-    const el = viewportRef.current
-    if (!el) return
-    el.scrollTo({
-      top: el.scrollHeight,
-      behavior: smooth ? 'smooth' : 'instant',
-    })
-    userScrolledUp.current = false
-    setShowJumpButton(false)
-    setIsAtBottom(true)
-  }, [viewportRef])
+  const scrollToBottom = useCallback(
+    (smooth = true) => {
+      const el = viewportRef.current
+      if (!el) return
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: smooth ? 'smooth' : 'instant',
+      })
+      userScrolledUp.current = false
+      setShowJumpButton(false)
+      setIsAtBottom(true)
+    },
+    [viewportRef],
+  )
 
   useEffect(() => {
     const el = viewportRef.current

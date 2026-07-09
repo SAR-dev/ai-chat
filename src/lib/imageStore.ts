@@ -3,7 +3,7 @@ const DB_VERSION = 1
 const STORE_NAME = 'generated-images'
 
 interface ImageRecord {
-  key: string // `${sessionId}:${assistantMessageId}`
+  key: string
   images: Array<{ b64: string; prompt?: string; caption?: string; width?: number; height?: number }>
 }
 
@@ -69,10 +69,7 @@ export async function clearStoredImages(sessionId: string): Promise<void> {
   }
 }
 
-export async function migrateImageKeys(
-  oldSessionId: string,
-  newSessionId: string,
-): Promise<void> {
+export async function migrateImageKeys(oldSessionId: string, newSessionId: string): Promise<void> {
   const db = await openDB()
   const tx = db.transaction(STORE_NAME, 'readwrite')
   const store = tx.objectStore(STORE_NAME)

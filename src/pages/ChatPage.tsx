@@ -5,13 +5,7 @@ import ChatWindow from '@/components/ChatWindow'
 import ChatHeader from '@/components/ChatHeader'
 import ChatInput from '@/components/ChatInput'
 import { useChatStore } from '@/stores/chatStore'
-import {
-  FileText,
-  Code,
-  Lightbulb,
-  Pen,
-  type LucideIcon,
-} from 'lucide-react'
+import { FileText, Code, Lightbulb, Pen, type LucideIcon } from 'lucide-react'
 
 interface Suggestion {
   key: string

@@ -42,8 +42,6 @@ const STAGE_TRANSLATION_KEYS: Record<SlideStageId, string> = {
   packaging: 'chat.slideStagePackaging',
 }
 
-// One icon per stage so each row is identifiable at a glance rather than
-// relying on color/text alone.
 const STAGE_ICONS: Record<SlideStageId, LucideIcon> = {
   research: Search,
   style: Palette,
@@ -68,8 +66,6 @@ export default function SlidePipelineStepper({ stages }: SlidePipelineStepperPro
     status: (stages[id]?.stage_status ?? 'pending') as SlideStageStatus,
   }))
 
-  // Skipped stages don't count toward the denominator -- they were never
-  // going to run, so they shouldn't make progress look stalled.
   const relevant = items.filter((item) => item.status != 'skipped')
   const doneCount = items.filter((item) => item.status == 'done').length
   const progress = relevant.length > 0 ? doneCount / relevant.length : 0
@@ -107,7 +103,7 @@ export default function SlidePipelineStepper({ stages }: SlidePipelineStepperPro
                     status == 'active' && 'border-primary text-primary bg-primary/10',
                     status == 'pending' && 'border-border bg-muted text-muted-foreground/40',
                     status == 'skipped' &&
-                    'border-border text-muted-foreground/30 border-dashed bg-transparent',
+                      'border-border text-muted-foreground/30 border-dashed bg-transparent',
                     status == 'error' && 'border-destructive text-destructive bg-destructive/10',
                   )}
                 >
