@@ -9,6 +9,7 @@ import {
   Pie,
   Area,
   Scatter,
+  Sector,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -16,6 +17,37 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { ArtifactData } from '@/types'
+import { useTheme } from './use-theme'
+
+const PALETTE = [
+  '#3B82F6',
+  '#EF4444',
+  '#10B981',
+  '#F59E0B',
+  '#8B5CF6',
+  '#EC4899',
+  '#06B6D4',
+  '#F97316',
+  '#84CC16',
+  '#A855F7',
+  '#14B8A6',
+  '#E11D48',
+]
+
+function hashCode(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash)
+}
+
+function hexToRgb(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (!result) return '59, 130, 246'
+  return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
+}
 
 function KpiCard({ kpi }: { kpi: NonNullable<ArtifactData['kpis']>[number] }) {
   const trendColor =
@@ -76,12 +108,23 @@ function TableView({ artifact }: { artifact: ArtifactData }) {
 }
 
 function ChartView({ artifact }: { artifact: ArtifactData }) {
+  const { theme } = useTheme()
   const chartType = artifact.chart_type ?? 'bar'
   const data = artifact.data ?? []
   const series = artifact.series ?? []
-  const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
+
+  const isDark =
+    theme === 'dark' ||
+    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const gridColor = isDark ? '#374151' : '#e5e7eb'
 
   if (data.length == 0) return null
+
+  function colorForKey(key: string): string {
+    const found = series.find((s) => s.key === key)
+    if (found?.color) return found.color
+    return PALETTE[hashCode(key) % PALETTE.length]
+  }
 
   const dataKeys =
     series.length > 0 ? series.map((s) => s.key) : Object.keys(data[0]).filter((k) => k !== 'name')
@@ -93,18 +136,20 @@ function ChartView({ artifact }: { artifact: ArtifactData }) {
         const isForecast = chartType == 'forecast'
         return (
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
             <XAxis dataKey="name" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip />
-            {dataKeys.map((key, i) => (
+            {dataKeys.map((key) => (
               <Line
                 key={key}
                 type="monotone"
                 dataKey={key}
-                stroke={colors[i % colors.length]}
+                stroke={colorForKey(key)}
                 strokeWidth={2}
-                strokeDasharray={isForecast && i == dataKeys.length - 1 ? '5 5' : undefined}
+                strokeDasharray={
+                  isForecast && key == dataKeys[dataKeys.length - 1] ? '5 5' : undefined
+                }
                 dot={false}
               />
             ))}
@@ -114,12 +159,12 @@ function ChartView({ artifact }: { artifact: ArtifactData }) {
       case 'bar':
         return (
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
             <XAxis dataKey="name" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip />
-            {dataKeys.map((key, i) => (
-              <Bar key={key} dataKey={key} fill={colors[i % colors.length]} radius={[4, 4, 0, 0]} />
+            {dataKeys.map((key) => (
+              <Bar key={key} dataKey={key} fill={colorForKey(key)} radius={[4, 4, 0, 0]} />
             ))}
           </BarChart>
         )
@@ -135,23 +180,26 @@ function ChartView({ artifact }: { artifact: ArtifactData }) {
               cy="50%"
               outerRadius={80}
               label
+              shape={(props: { payload?: { name?: string } }) => (
+                <Sector {...props} fill={colorForKey(String(props.payload?.name ?? ''))} />
+              )}
             />
           </PieChart>
         )
       case 'area':
         return (
           <AreaChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
             <XAxis dataKey="name" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip />
-            {dataKeys.map((key, i) => (
+            {dataKeys.map((key) => (
               <Area
                 key={key}
                 type="monotone"
                 dataKey={key}
-                stroke={colors[i % colors.length]}
-                fill={colors[i % colors.length]}
+                stroke={colorForKey(key)}
+                fill={colorForKey(key)}
                 fillOpacity={0.1}
                 strokeWidth={2}
               />
@@ -161,12 +209,12 @@ function ChartView({ artifact }: { artifact: ArtifactData }) {
       case 'scatter':
         return (
           <ScatterChart>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
             <XAxis dataKey="name" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip />
-            {dataKeys.map((key, i) => (
-              <Scatter key={key} dataKey={key} fill={colors[i % colors.length]} data={data} />
+            {dataKeys.map((key) => (
+              <Scatter key={key} dataKey={key} fill={colorForKey(key)} data={data} />
             ))}
           </ScatterChart>
         )
@@ -183,7 +231,9 @@ function ChartView({ artifact }: { artifact: ArtifactData }) {
                 <div
                   key={i}
                   className="flex items-center justify-center p-2 text-xs font-medium"
-                  style={{ backgroundColor: `rgba(59, 130, 246, ${opacity})` }}
+                  style={{
+                    backgroundColor: `rgba(${hexToRgb(colorForKey(dataKeys[0] ?? 'value'))}, ${opacity})`,
+                  }}
                   title={`${row.name}: ${val}`}
                 >
                   {row.name}

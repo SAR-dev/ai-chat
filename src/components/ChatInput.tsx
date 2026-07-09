@@ -316,7 +316,7 @@ export default function ChatInput({
                   <ChevronDown className="h-3 w-3 shrink-0" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-60 p-1">
-                  <DropdownMenuRadioGroup value={mode} onValueChange={setMode}>
+                  <DropdownMenuRadioGroup value={mode} onValueChange={setMode} className="pb-1">
                     <DropdownMenuLabel>Mode</DropdownMenuLabel>
                     {MODES.map((option) => {
                       const Icon = option.icon
@@ -334,7 +334,7 @@ export default function ChatInput({
                     })}
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuRadioGroup value={slideStyle} onValueChange={setSlideStyle}>
+                  <DropdownMenuRadioGroup value={slideStyle} onValueChange={setSlideStyle} className="pb-1">
                     <DropdownMenuLabel>Slide</DropdownMenuLabel>
                     {SLIDE_STYLES.map((option) => {
                       const Icon = option.icon
