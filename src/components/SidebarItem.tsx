@@ -71,11 +71,11 @@ export default function SidebarItem({
           >
             <Trash2 className="h-3 w-3" />
           </AlertDialogTrigger>
-          <AlertDialogContent>
+          <AlertDialogContent size="lg">
             <img
               src="/vectors/alert.svg"
               alt=""
-              className="mx-auto h-20 w-20 object-contain"
+              className="mx-auto size-40 object-contain"
               aria-hidden
             />
             <AlertDialogHeader>
