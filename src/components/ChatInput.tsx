@@ -78,19 +78,17 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
   const inputId = `file-upload-input-${rawId.replace(/[:]/g, '')}`
   const [input, setInput] = useState('')
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
-  const [isCreatingSession, setIsCreatingSession] = useState(false)
   const [mode, setMode] = useState<string>(MODES[0].id)
   const [slideStyle, setSlideStyle] = useState<string>(SLIDE_STYLES[0].id)
   const [internetSearch, setInternetSearch] = useState(false)
   const [agentMode, setAgentMode] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>('normalChat')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const createSession = useChatStore((s) => s.createSession)
   const sendChatMessage = useChatStore((s) => s.sendChatMessage)
   const sendRagMessage = useChatStore((s) => s.sendRagMessage)
   const stopStreaming = useChatStore((s) => s.stopStreaming)
   const isStreaming = useChatStore((s) => s.isStreaming)
-  const isLoading = useChatStore((s) => s.messagesStatus === 'loading')
+  const isLoading = useChatStore((s) => s.messagesStatus == 'loading')
   const categories = useChatStore((s) => s.categories)
   const fetchCategories = useChatStore((s) => s.fetchCategories)
 
@@ -134,7 +132,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
     [],
   )
 
-  const disabled = isStreaming || isLoading || isCreatingSession
+  const disabled = isStreaming || isLoading
 
   // Autofocus on mount / when switching conversations, and again once the
   // input re-enables after sending -- so the user can keep typing without
@@ -149,7 +147,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
 
   const removeFile = useCallback((id: string) => {
     setPendingFiles((prev) => {
-      const file = prev.find((f) => f.id === id)
+      const file = prev.find((f) => f.id == id)
       if (file?.preview) URL.revokeObjectURL(file.preview)
       return prev.filter((f) => f.id !== id)
     })
@@ -157,7 +155,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
 
   const handleSend = useCallback(async () => {
     const content = input.trim()
-    if (!content && pendingFiles.length === 0) return
+    if (!content && pendingFiles.length == 0) return
     setInput('')
     setPendingFiles([])
 
@@ -165,45 +163,42 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
       textareaRef.current.style.height = `${MIN_TEXTAREA_HEIGHT}px`
     }
 
-    // If no sessionId, create one first
-    let targetSessionId = sessionId
-    if (!targetSessionId) {
-      setIsCreatingSession(true)
-      try {
-        const session = await createSession()
-        targetSessionId = session.id
-        navigate(`/chat/${session.id}`)
-      } finally {
-        setIsCreatingSession(false)
-      }
-    }
-
     const modeVal = mode as 'fast' | 'thinking'
     const cat = selectedCategory !== 'normalChat' ? selectedCategory : (category ?? 'normalChat')
 
     if (cat && cat !== 'normalChat') {
-      await sendRagMessage(targetSessionId, content, cat, {
-        mode: modeVal,
-        top_k: '5',
-        internet_search: internetSearch,
-        agent_mode: agentMode,
-      })
+      const newSessionId = sessionId ?? null
+      await sendRagMessage(
+        newSessionId,
+        content,
+        cat,
+        {
+          mode: modeVal,
+          top_k: '5',
+          internet_search: internetSearch,
+          agent_mode: agentMode,
+        },
+        newSessionId == null ? (id) => navigate(`/chat/${id}`) : undefined,
+      )
     } else {
-      const effectiveSessionId = await sendChatMessage(targetSessionId, content, {
-        mode: modeVal,
-        slide_mode: slideStyle as 'standard' | 'creative',
-        internet_search: internetSearch,
-        agent_mode: agentMode,
-      })
-      if (effectiveSessionId !== targetSessionId) {
-        navigate(`/chat/${effectiveSessionId}`, { replace: true })
-      }
+      const targetSessionId = sessionId ?? null
+      await sendChatMessage(
+        targetSessionId,
+        content,
+        {
+          mode: modeVal,
+          slide_mode: slideStyle as 'standard' | 'creative',
+          internet_search: internetSearch,
+          agent_mode: agentMode,
+        },
+        targetSessionId == null ? (id) => navigate(`/chat/${id}`) : undefined,
+      )
     }
-  }, [input, pendingFiles, sessionId, createSession, navigate, sendChatMessage, sendRagMessage, mode, slideStyle, internetSearch, agentMode, category, selectedCategory])
+  }, [input, pendingFiles, sessionId, navigate, sendChatMessage, sendRagMessage, mode, slideStyle, internetSearch, agentMode, category, selectedCategory])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key == 'Enter' && !e.shiftKey) {
         e.preventDefault()
         handleSend()
       }
@@ -221,9 +216,9 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
   )
 
   const canSend = !disabled && (input.trim().length > 0 || pendingFiles.length > 0)
-  const isHero = variant === 'hero'
-  const activeMode = MODES.find((m) => m.id === mode) ?? MODES[0]
-  const activeSlideStyle = SLIDE_STYLES.find((s) => s.id === slideStyle) ?? SLIDE_STYLES[0]
+  const isHero = variant == 'hero'
+  const activeMode = MODES.find((m) => m.id == mode) ?? MODES[0]
+  const activeSlideStyle = SLIDE_STYLES.find((s) => s.id == slideStyle) ?? SLIDE_STYLES[0]
   const ActiveModeIcon = activeMode.icon
   const ActiveSlideIcon = activeSlideStyle.icon
 

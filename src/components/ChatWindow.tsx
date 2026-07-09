@@ -22,7 +22,7 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
   const isStreaming = useChatStore((s) => s.isStreaming)
   const streamingContent = useChatStore((s) => {
     const msgs = s.messagesBySessionId[sessionId] ?? []
-    const streamingMsg = msgs.find((m) => m.uuid === s.streamingMessageId)
+    const streamingMsg = msgs.find((m) => m.uuid == s.streamingMessageId)
     return streamingMsg?.content ?? ''
   })
   const streamingMessageId = useChatStore((s) => s.streamingMessageId)
@@ -39,10 +39,16 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
 
   useEffect(() => {
     setActiveSession(sessionId)
-    loadMessages(sessionId)
-  }, [sessionId, loadMessages, setActiveSession])
+    // Skip loading when a stream is in progress — the store has already been
+    // populated with optimistic + in-flight messages.  Once the stream ends
+    // `isStreaming` flips to false and this effect re-runs, fetching the
+    // complete conversation (and the real title) from the server.
+    if (!isStreaming) {
+      loadMessages(sessionId)
+    }
+  }, [sessionId, loadMessages, setActiveSession, isStreaming])
 
-  if (messagesStatus === 'loading') {
+  if (messagesStatus == 'loading') {
     return (
       <div className="mx-auto w-full max-w-3xl flex-1 space-y-6 p-4 sm:p-6">
         {Array.from({ length: 3 }).map((_, i) => (
@@ -56,10 +62,10 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
     )
   }
 
-  if (messages.length === 0) {
+  if (messages.length == 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3">
-        <img src="/mascot/victory-pose.png" alt="" className="h-16 w-16 object-contain" aria-hidden />
+        <img src="/vectors/victory-pose.svg" alt="" className="h-16 w-16 object-contain" aria-hidden />
         <p className="text-muted-foreground text-sm">{t('chat.emptyConversation')}</p>
       </div>
     )
@@ -74,11 +80,11 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
               key={msg.uuid}
               message={msg}
               sessionId={sessionId}
-              isStreaming={msg.uuid === streamingMessageId}
-              streamingContent={msg.uuid === streamingMessageId ? streamingContent : undefined}
+              isStreaming={msg.uuid == streamingMessageId}
+              streamingContent={msg.uuid == streamingMessageId ? streamingContent : undefined}
             />
           ))}
-          {isStreaming && streamingContent === '' && <TypingIndicator />}
+          {isStreaming && streamingContent == '' && <TypingIndicator />}
         </div>
       </ScrollArea>
       {showJumpButton && (

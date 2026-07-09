@@ -253,7 +253,7 @@ const components: Components = {
     return <hr className="border-border my-6" {...props} />
   },
   input({ type, checked, disabled, ...props }) {
-    if (type === 'checkbox') {
+    if (type == 'checkbox') {
       return (
         <input
           type="checkbox"
@@ -271,15 +271,15 @@ const components: Components = {
     const isInline = !className
     const language = className?.replace('language-', '') ?? ''
 
-    if (language === 'mermaid') {
+    if (language == 'mermaid') {
       return <MermaidBlock code={String(children).replace(/\n$/, '')} />
     }
 
-    if (language === 'plantuml') {
+    if (language == 'plantuml') {
       return <PlantUMLBlock code={String(children).replace(/\n$/, '')} />
     }
 
-    if (language === 'html') {
+    if (language == 'html') {
       return <HTMLPreviewBlock code={String(children).replace(/\n$/, '')} />
     }
 

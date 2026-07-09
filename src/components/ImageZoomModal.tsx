@@ -24,8 +24,8 @@ export default function ImageZoomModal({ images, index, onOpenChange }: ImageZoo
   useEffect(() => {
     if (!hasMultiple) return
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') goPrev()
-      if (e.key === 'ArrowRight') goNext()
+      if (e.key == 'ArrowLeft') goPrev()
+      if (e.key == 'ArrowRight') goNext()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)

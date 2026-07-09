@@ -91,7 +91,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
             <Label>{t('settings.language')}</Label>
             <Select value={currentLang} onValueChange={handleLanguageChange}>
               <SelectTrigger className="w-full">
-                <span>{currentLang === 'en' ? t('settings.languageEn') : t('settings.languageJa')}</span>
+                <span>{currentLang == 'en' ? t('settings.languageEn') : t('settings.languageJa')}</span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="en">{t('settings.languageEn')}</SelectItem>

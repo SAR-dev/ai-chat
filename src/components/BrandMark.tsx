@@ -7,7 +7,7 @@ interface BrandMarkProps {
 export default function BrandMark({ className }: BrandMarkProps) {
   return (
     <img
-      src="/brand/logo.png"
+      src="/vectors/logo.svg"
       alt="Chattie"
       className={cn('h-8 w-8 shrink-0 object-contain', className)}
     />

@@ -30,7 +30,6 @@ export default function ChatPage() {
   const { sessionId } = useParams()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const createSession = useChatStore((s) => s.createSession)
   const sendChatMessage = useChatStore((s) => s.sendChatMessage)
   const [isStarting, setIsStarting] = useState(false)
 
@@ -39,17 +38,14 @@ export default function ChatPage() {
       if (isStarting) return
       setIsStarting(true)
       try {
-        const session = await createSession()
-        navigate(`/chat/${session.id}`)
-        const realId = await sendChatMessage(session.id, prompt)
-        if (realId !== session.id) {
-          navigate(`/chat/${realId}`, { replace: true })
-        }
+        await sendChatMessage(null, prompt, undefined, (id) => {
+          navigate(`/chat/${id}`)
+        })
       } finally {
         setIsStarting(false)
       }
     },
-    [createSession, navigate, sendChatMessage, isStarting],
+    [sendChatMessage, navigate, isStarting],
   )
 
   if (!sessionId) {
@@ -57,7 +53,7 @@ export default function ChatPage() {
       <div className="flex h-full flex-col items-center justify-center gap-8 px-4 text-center">
         <div className="flex flex-col items-center gap-3">
           <img
-            src="/mascot/victory-pose.png"
+            src="/vectors/victory-pose.svg"
             alt=""
             className="h-24 w-24 object-contain"
             aria-hidden

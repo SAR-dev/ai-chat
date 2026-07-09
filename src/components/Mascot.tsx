@@ -39,7 +39,7 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
       <ellipse cx="128" cy="196" rx="20" ry="14" className="fill-primary" />
 
       {/* Face */}
-      {expression === 'excited' ? (
+      {expression == 'excited' ? (
         <>
           <path
             d="M74 100 Q82 92 90 100"
@@ -68,7 +68,7 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
       <ellipse cx="100" cy="112" rx="7" ry="5" className="fill-primary" />
 
       {/* Mouth */}
-      {expression === 'thinking' ? (
+      {expression == 'thinking' ? (
         <path
           d="M90 130 Q100 122 110 130"
           className="stroke-primary"
@@ -87,7 +87,7 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
       )}
 
       {/* Arms */}
-      {expression === 'happy' && (
+      {expression == 'happy' && (
         <path
           d="M164 132 Q178 118 172 100"
           className="stroke-primary-foreground"
@@ -96,7 +96,7 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
           fill="none"
         />
       )}
-      {expression === 'excited' && (
+      {expression == 'excited' && (
         <>
           <path
             d="M162 130 Q182 112 176 90"
@@ -114,7 +114,7 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
           />
         </>
       )}
-      {(expression === 'happy' || expression === 'thinking' || expression === 'love') && (
+      {(expression == 'happy' || expression == 'thinking' || expression == 'love') && (
         <path
           d="M36 132 Q22 118 28 100"
           className="stroke-primary-foreground"
@@ -123,7 +123,7 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
           fill="none"
         />
       )}
-      {expression === 'typing' && (
+      {expression == 'typing' && (
         <>
           <path
             d="M40 150 Q52 138 68 150"
@@ -143,12 +143,12 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
       )}
 
       {/* Expression props */}
-      {expression === 'thinking' && (
+      {expression == 'thinking' && (
         <text x="150" y="60" className="fill-primary" fontSize="30" fontWeight="600">
           ?
         </text>
       )}
-      {expression === 'typing' && (
+      {expression == 'typing' && (
         <g>
           <rect x="60" y="150" width="80" height="34" rx="6" className="fill-muted" />
           <circle cx="86" cy="167" r="3" className="fill-primary" />
@@ -156,7 +156,7 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
           <circle cx="114" cy="167" r="3" className="fill-primary" />
         </g>
       )}
-      {expression === 'love' && (
+      {expression == 'love' && (
         <>
           <path
             d="M100 150 C92 140 74 144 74 158 C74 172 100 186 100 186 C100 186 126 172 126 158 C126 144 108 140 100 150Z"
@@ -178,7 +178,7 @@ export default function Mascot({ expression = 'happy', className, style }: Masco
           />
         </>
       )}
-      {expression === 'happy' && (
+      {expression == 'happy' && (
         <>
           <path
             d="M28 66 L34 76"

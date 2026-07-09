@@ -40,7 +40,7 @@ apiClient.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${token}`
       }
     } catch {
-      // ignore
+      void 0
     }
   }
   return config
@@ -53,8 +53,6 @@ apiClient.interceptors.response.use(
     return Promise.reject(new Error(message))
   },
 )
-
-// ── Auth ──
 
 export async function login(data: LoginPayload): Promise<LoginResponse> {
   const res = await apiClient.post('/login', data)
@@ -71,10 +69,9 @@ export async function register(data: RegistrationRequest): Promise<RegistrationR
   return res.data
 }
 
-// ── Chat Streaming (SSE) ──
-
 export interface SSEStreamCallbacks {
   onToken?: (token: string) => void
+  onSessionId?: (sessionId: string) => void
   onTitleUpdated?: (data: { session_title: string; session_id: string }) => void
   onAgentTools?: (data: { tools: string[]; reasoning?: string }) => void
   onArtifact?: (artifact: Record<string, unknown>) => void
@@ -100,7 +97,7 @@ async function streamFromURL(
       const parsed = JSON.parse(stored)
       token = parsed?.token ?? parsed?.state?.token ?? ''
     } catch {
-      // ignore
+      void 0
     }
   }
 
@@ -120,6 +117,9 @@ async function streamFromURL(
   }
 
   const sessionId = response.headers.get('X-Session-Id') ?? ''
+  if (sessionId) {
+    callbacks.onSessionId?.(sessionId)
+  }
 
   const reader = response.body?.getReader()
   if (!reader) throw new Error('No response body')
@@ -158,7 +158,6 @@ async function streamFromURL(
     }
   }
 
-  // SSE parsing
   let raw = ''
 
   while (true) {
@@ -167,7 +166,6 @@ async function streamFromURL(
 
     raw += decoder.decode(value, { stream: true })
 
-    // Parse SSE: split by double newline
     const parts = raw.split('\n\n')
     raw = parts.pop() ?? ''
 
@@ -191,54 +189,59 @@ async function streamFromURL(
       try {
         const data = JSON.parse(dataStr)
 
-        if (eventType === 'title_updated') {
+        if (eventType == 'title_updated') {
           callbacks.onTitleUpdated?.(data)
           continue
         }
 
-        if (eventType === 'agent_tools') {
+        if (eventType == 'agent_tools') {
           callbacks.onAgentTools?.(data)
           continue
         }
 
-        // Events with type field in data
-        if (data.type === 'artifact') {
+        if (data.type == 'artifact') {
           callbacks.onArtifact?.(data.artifact)
           continue
         }
 
-        if (data.type === 'image') {
+        if (data.type == 'image') {
           callbacks.onImage?.(data.image)
           continue
         }
 
-        if (data.type === 'image_status') {
+        if (data.type == 'image_status') {
           callbacks.onImageStatus?.(data.message)
           continue
         }
 
-        if (data.type === 'slide') {
+        if (data.type == 'slide') {
           callbacks.onSlide?.(data.slide)
           continue
         }
 
-        if (data.type === 'slide_status') {
+        if (data.type == 'slide_status') {
           callbacks.onSlideStatus?.(data)
           continue
         }
 
-        if (data.type === 'sources') {
+        if (data.type == 'sources') {
           callbacks.onSources?.(data.sources)
           continue
         }
 
-        if (data.type === 'done') {
+        if (data.type == 'start') {
+          if (data.session_id) {
+            callbacks.onSessionId?.(String(data.session_id))
+          }
+          continue
+        }
+
+        if (data.type == 'done') {
           flushTokens()
           callbacks.onDone?.(data.assistant_message_id)
           continue
         }
 
-        // Text tokens — accept any field
         const tokenText =
           data.content ?? data.chunk ?? data.delta ?? data.reply ?? data.answer ?? data.full_text ?? null
         if (tokenText !== null) {
@@ -246,19 +249,16 @@ async function streamFromURL(
           continue
         }
 
-        // Plain string
-        if (typeof data === 'string') {
+        if (typeof data == 'string') {
           pushToken(data)
           continue
         }
       } catch {
-        // Not JSON — treat as plain text token
         pushToken(dataStr)
       }
     }
   }
 
-  // Final flush
   flushTokens()
 
   return sessionId
@@ -295,16 +295,12 @@ export async function queryStream(
   return streamFromURL(url, data, callbacks, signal)
 }
 
-// ── Chat Download ──
-
 export async function downloadChat(data: ChatDownloadRequest): Promise<Blob> {
   const res = await apiClient.post('/chat/download', data, {
     responseType: 'blob',
   })
   return res.data
 }
-
-// ── Sessions ──
 
 export async function fetchSessions(limit?: number, offset?: number): Promise<SessionHistoryResponse> {
   const params: Record<string, string> = {}
@@ -323,10 +319,6 @@ export async function deleteSessionApi(sessionId: string): Promise<void> {
   await apiClient.delete(`/sessions/${sessionId}`)
 }
 
-export async function renameSessionApi(sessionId: string, title: string): Promise<void> {
-  await apiClient.patch(`/sessions/${sessionId}`, { title })
-}
-
 export async function pinSessionApi(sessionId: string, pinned: boolean): Promise<void> {
   await apiClient.patch(`/sessions/${sessionId}`, { pinned })
 }
@@ -339,8 +331,6 @@ export async function truncateMessages(
   return res.data
 }
 
-// ── Feedback ──
-
 export async function submitFeedback(
   messageId: number,
   data: FeedbackRequest,
@@ -349,14 +339,10 @@ export async function submitFeedback(
   return res.data
 }
 
-// ── Categories ──
-
 export async function fetchCategories(): Promise<Category[]> {
   const res = await apiClient.get('/categories')
   return res.data
 }
-
-// ── User Settings ──
 
 export async function fetchUserSettings(): Promise<GetUserSettingsResponse> {
   const res = await apiClient.get('/user/settings')
@@ -368,8 +354,6 @@ export async function updateUserSettings(data: UserSettings): Promise<UserSettin
   return res.data
 }
 
-// ── Slides ──
-
 export async function regenerateSlide(
   deckId: string,
   slideId: number,
@@ -378,8 +362,6 @@ export async function regenerateSlide(
   const res = await apiClient.post(`/slides/${deckId}/${slideId}/regenerate`, data)
   return res.data
 }
-
-// ── Request Management ──
 
 export async function cancelRequest(requestId: string): Promise<CancelRequestResponse> {
   const res = await apiClient.post(`/request/cancel/${requestId}`)

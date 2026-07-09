@@ -39,7 +39,7 @@ export default function ChatMessage({
   streamingContent,
 }: ChatMessageProps) {
   const { t } = useTranslation()
-  const isUser = message.type === 'right'
+  const isUser = message.type == 'right'
   const displayContent = isStreaming ? (streamingContent ?? '') : message.content
   const [isEditing, setIsEditing] = useState(false)
   const [revealed, setRevealed] = useState(displayContent)
@@ -129,7 +129,7 @@ export default function ChatMessage({
   }
 
   const handleFeedback = (isHelpful: boolean) => {
-    const newValue = message.is_helpful === isHelpful ? null : isHelpful
+    const newValue = message.is_helpful == isHelpful ? null : isHelpful
     if (message.assistantMessageId) {
       submitFeedback(message.assistantMessageId, newValue)
     }
@@ -153,9 +153,9 @@ export default function ChatMessage({
               <div className="mt-2 space-y-1">
                 {message.agentTools.map((tool) => (
                   <span key={tool} className="bg-accent text-accent-foreground mr-1 inline-block rounded px-1.5 py-0.5 text-xs">
-                    {tool === 'rag_search' && '🔍 RAG Search'}
-                    {tool === 'web_search' && '🌐 Web Search'}
-                    {tool === 'company_kb_search' && '📚 Company KB Search'}
+                    {tool == 'rag_search' && '🔍 RAG Search'}
+                    {tool == 'web_search' && '🌐 Web Search'}
+                    {tool == 'company_kb_search' && '📚 Company KB Search'}
                     {tool !== 'rag_search' && tool !== 'web_search' && tool !== 'company_kb_search' && `🧰 Tool: ${tool}`}
                   </span>
                 ))}
@@ -202,11 +202,11 @@ export default function ChatMessage({
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (e.key == 'Enter' && !e.shiftKey) {
                   e.preventDefault()
                   handleEdit()
                 }
-                if (e.key === 'Escape') setIsEditing(false)
+                if (e.key == 'Escape') setIsEditing(false)
               }}
               autoFocus
               className="max-h-[45vh] min-h-20 resize-none overflow-y-auto border-0 bg-transparent shadow-none ring-0 outline-none focus-visible:ring-0"
@@ -322,7 +322,7 @@ export default function ChatMessage({
                     onClick={() => handleFeedback(true)}
                   >
                     <ThumbsUp
-                      className={cn('h-3 w-3', message.is_helpful === true && 'text-primary')}
+                      className={cn('h-3 w-3', message.is_helpful == true && 'text-primary')}
                     />
                   </TooltipTrigger>
                   <TooltipContent>{t('chat.feedbackHelpful')}</TooltipContent>
@@ -333,7 +333,7 @@ export default function ChatMessage({
                     onClick={() => handleFeedback(false)}
                   >
                     <ThumbsDown
-                      className={cn('h-3 w-3', message.is_helpful === false && 'text-destructive')}
+                      className={cn('h-3 w-3', message.is_helpful == false && 'text-destructive')}
                     />
                   </TooltipTrigger>
                   <TooltipContent>{t('chat.feedbackNotHelpful')}</TooltipContent>
