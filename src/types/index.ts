@@ -182,6 +182,7 @@ export interface ChatMessage {
   is_helpful?: boolean | null
   sources?: SourceLink[]
   artifacts?: ArtifactData[]
+  slides?: SlideDeck[]
 }
 
 export interface ChatHistoryResponse {

@@ -13,6 +13,7 @@ import type {
 } from '@/types'
 import * as api from '@/lib/apiClient'
 import { storeImages, getStoredImages } from '@/lib/imageStore'
+import { applyPinnedState, setSessionPinned, clearSessionPinned } from '@/lib/pinnedSessions'
 
 interface ChatState {
   sessions: ChatSessionSummary[]
@@ -114,8 +115,9 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     set({ sessionsStatus: 'loading' })
     try {
       const result = await api.fetchSessions(limit, offset)
+      const sessions = await applyPinnedState(result.sessions)
       set({
-        sessions: result.sessions,
+        sessions,
         sessionsStatus: 'idle',
         isEndOfHistory: result.count <= offset + limit,
       })
@@ -140,8 +142,9 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const offset = state.sessions.length
     try {
       const result = await api.fetchSessions(50, offset)
+      const newSessions = await applyPinnedState(result.sessions)
       set((s) => ({
-        sessions: [...s.sessions, ...result.sessions],
+        sessions: [...s.sessions, ...newSessions],
         isEndOfHistory: result.count <= offset + result.sessions.length,
       }))
     } catch {
@@ -155,6 +158,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     } catch {
       void 0
     }
+    await clearSessionPinned(id)
     set((state) => {
       const rest = { ...state.messagesBySessionId }
       delete rest[id]
@@ -172,6 +176,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     if (!session) return
     const newPinned = !session.pinned
 
+    // Pin state is managed entirely on the client (IndexedDB) — no API call.
     set((s) => ({
       sessions: s.sessions
         .map((sess) => (sess.id == id ? { ...sess, pinned: newPinned } : sess))
@@ -182,20 +187,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         }),
     }))
 
-    try {
-      await api.pinSessionApi(id, newPinned)
-    } catch {
-      // Roll back on failure
-      set((s) => ({
-        sessions: s.sessions
-          .map((sess) => (sess.id == id ? { ...sess, pinned: !newPinned } : sess))
-          .sort((a, b) => {
-            if (a.pinned && !b.pinned) return -1
-            if (!a.pinned && b.pinned) return 1
-            return 0
-          }),
-      }))
-    }
+    await setSessionPinned(id, newPinned)
   },
 
   setActiveSession: (id: string | null) => {
@@ -207,9 +199,19 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     try {
       const result = await api.fetchSession(sessionId)
       const categoryTag = result.session.category !== 'normalChat' ? result.session.category : ''
+      // Snapshot whatever's already in memory for this session before we
+      // overwrite it. The history endpoint doesn't reliably return `slides`
+      // for every message (e.g. a deck generated moments ago via the live
+      // SSE stream may not have round-tripped to the DB and back yet), so
+      // rather than reset to `[]` and make a just-generated deck vanish, we
+      // fall back to whatever slide data this message already has locally.
+      const existingBySessionId = new Map(
+        (get().messagesBySessionId[sessionId] ?? []).map((m) => [m.dbId, m]),
+      )
       const messages: MessageState[] = await Promise.all(
         result.messages.map(async (msg) => {
           const stored = msg.role !== 'user' ? await getStoredImages(sessionId, msg.id) : null
+          const existing = existingBySessionId.get(msg.id)
           return {
             type: msg.role == 'user' ? 'right' : 'left',
             content: msg.content,
@@ -221,7 +223,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             images: stored ?? [],
             slideStatus: '',
             slideStages: {},
-            slides: [],
+            slides: msg.slides ?? existing?.slides ?? [],
             sources: msg.sources ?? [],
             artifacts: msg.artifacts ?? [],
             isRagMessage: result.session.category !== 'normalChat',
@@ -236,8 +238,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       set((state) => {
         const sessions = state.sessions.some((s) => s.id == sessionId)
           ? state.sessions.map((s) =>
-              s.id == sessionId ? { ...s, title: result.session.title } : s,
-            )
+            s.id == sessionId ? { ...s, title: result.session.title } : s,
+          )
           : state.sessions
 
         return {
@@ -446,7 +448,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                 if (msgId && m.images.length > 0) {
                   imagesToStore.push({ sessionId: storageKey, msgId, images: m.images as GeneratedImage[] })
                 }
-                return { ...m, assistantMessageId: msgId }
+                // `dbId` and `assistantMessageId` represent the same server
+                // id and must stay in sync -- loadMessages() looks messages
+                // up by `dbId` to preserve state (like just-generated slides)
+                // that the history endpoint doesn't return yet.
+                return { ...m, assistantMessageId: msgId, dbId: msgId }
               })
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
@@ -586,7 +592,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                 if (msgId && m.images.length > 0) {
                   imagesToStore.push({ sessionId: storageKey, msgId, images: m.images as GeneratedImage[] })
                 }
-                return { ...m, assistantMessageId: msgId }
+                // `dbId` and `assistantMessageId` represent the same server
+                // id and must stay in sync -- loadMessages() looks messages
+                // up by `dbId` to preserve state (like just-generated slides)
+                // that the history endpoint doesn't return yet.
+                return { ...m, assistantMessageId: msgId, dbId: msgId }
               })
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
@@ -711,10 +721,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             slides: msg.slides.map((deck) =>
               deck.deckId == result.deck_id
                 ? {
-                    ...deck,
-                    html: result.html_fragment ?? deck.html,
-                    pptxUrl: result.pptx_url,
-                  }
+                  ...deck,
+                  html: result.html_fragment ?? deck.html,
+                  pptxUrl: result.pptx_url,
+                }
                 : deck,
             ),
           }))

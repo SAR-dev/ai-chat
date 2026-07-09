@@ -7,7 +7,7 @@ interface ChatHeaderProps {
 
 export default function ChatHeader({ sessionId }: ChatHeaderProps) {
   const { t } = useTranslation()
-  const title = useChatStore((s) => s.sessions.find((sess) => sess.id === sessionId)?.title)
+  const title = useChatStore((s) => s.sessions.find((sess) => sess.id == sessionId)?.title)
   const displayTitle = title || t('sidebar.newChat')
 
   return (

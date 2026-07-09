@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
-import { animate } from 'framer-motion'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -33,51 +32,21 @@ interface ChatMessageProps {
 }
 
 export default function ChatMessage({
-  message,
-  sessionId,
-  isStreaming,
-  streamingContent,
-}: ChatMessageProps) {
+                                      message,
+                                      sessionId,
+                                      isStreaming,
+                                      streamingContent,
+                                    }: ChatMessageProps) {
   const { t } = useTranslation()
   const isUser = message.type == 'right'
+  // Pacing already happens upstream in apiClient.ts (adaptive token drip-feed
+  // into the store). Re-animating the reveal again here at a fixed rate would
+  // just override that pacing with a constant speed — so we render whatever
+  // content we're given directly instead of re-typewriting it a second time.
   const displayContent = isStreaming ? (streamingContent ?? '') : message.content
   const [isEditing, setIsEditing] = useState(false)
-  const [revealed, setRevealed] = useState(displayContent)
-  const targetRef = useRef(displayContent)
-  const posRef = useRef(displayContent.length)
 
-  useEffect(() => {
-    targetRef.current = displayContent
-  }, [displayContent])
-
-  useEffect(() => {
-    const full = targetRef.current
-
-    if (!isStreaming) {
-      posRef.current = full.length
-      setRevealed(full)
-      return
-    }
-
-    const from = posRef.current
-    const to = full.length
-    if (from >= to) return
-
-    const controls = animate(from, to, {
-      type: 'tween',
-      ease: 'linear',
-      duration: (to - from) / 60,
-      onUpdate: (latest) => {
-        const rounded = Math.round(latest)
-        posRef.current = rounded
-        setRevealed(targetRef.current.slice(0, rounded))
-      },
-    })
-
-    return () => controls.stop()
-  }, [isStreaming, displayContent])
-
-  const contentToRender = !isStreaming ? displayContent : revealed
+  const contentToRender = displayContent
 
   const [zoomIndex, setZoomIndex] = useState<number | null>(null)
   const [editContent, setEditContent] = useState(message.content)

@@ -238,7 +238,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
 
         <div
           className={cn(
-            'border-border bg-card focus-within:border-primary/60 focus-within:ring-primary/15 rounded-3xl border shadow-sm transition-all focus-within:ring-4',
+            'border-border bg-card focus-within:border-primary/60 focus-within:ring-primary/15 border shadow-sm transition-all focus-within:ring-4 rounded-lg',
             isDragActive && 'border-primary/60 ring-primary/15 ring-4',
             isHero && 'shadow-md',
           )}
@@ -376,7 +376,7 @@ export default function ChatInput({ sessionId, variant = 'default', className, c
                         {categories.map((cat) => (
                           <DropdownMenuRadioItem key={cat.name} value={cat.name}>
                             <FolderOpen className="h-4 w-4" />
-                            <span>{cat.name}</span>
+                            <span className="capitalize">{cat.name}</span>
                           </DropdownMenuRadioItem>
                         ))}
                       </DropdownMenuRadioGroup>

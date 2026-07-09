@@ -127,14 +127,29 @@ async function streamFromURL(
   const decoder = new TextDecoder()
 
   // Token pacing: display tokens at a constant rate regardless of API delivery speed
-  const DISPLAY_INTERVAL = 40
-  let tokenQueue: string[] = []
+  const DISPLAY_INTERVAL = 40 // ms — baseline pace when the queue is roughly caught up
+  const MIN_INTERVAL = 12 // ms — floor so a big backlog still animates instead of jumping
+  const CHARS_PER_PIECE = 2 // split incoming chunks this small so pacing has fine granularity
+  const tokenQueue: string[] = []
   let displayTimer: ReturnType<typeof setTimeout> | null = null
 
+  // Adaptive pacing: the gap between displayed pieces shrinks as the queue
+  // backs up. At low backlog it paces at DISPLAY_INTERVAL (smooth, readable);
+  // as more pieces pile up it speeds up toward MIN_INTERVAL to catch back up.
+  // Backlog is measured in small fixed-size pieces (see CHARS_PER_PIECE),
+  // not raw backend chunks — the API may deliver a whole sentence in one
+  // chunk, and pacing over *that* as a single unit would still look like an
+  // instant dump no matter how the delay itself is tuned.
+  function nextInterval() {
+    const backlog = tokenQueue.length
+    return Math.max(MIN_INTERVAL, DISPLAY_INTERVAL - backlog * 2)
+  }
+
   function pushToken(token: string) {
-    tokenQueue.push(token)
+    const pieces = token.match(new RegExp(`.{1,${CHARS_PER_PIECE}}`, 'gs')) ?? [token]
+    tokenQueue.push(...pieces)
     if (!displayTimer) {
-      displayTimer = setTimeout(displayNext, DISPLAY_INTERVAL)
+      displayTimer = setTimeout(displayNext, nextInterval())
     }
   }
 
@@ -144,18 +159,34 @@ async function streamFromURL(
       callbacks.onToken?.(tokenQueue.shift()!)
     }
     if (tokenQueue.length > 0) {
-      displayTimer = setTimeout(displayNext, DISPLAY_INTERVAL)
+      displayTimer = setTimeout(displayNext, nextInterval())
     }
   }
 
-  function flushTokens() {
-    if (displayTimer) {
-      clearTimeout(displayTimer)
-      displayTimer = null
-    }
-    while (tokenQueue.length > 0) {
-      callbacks.onToken?.(tokenQueue.shift()!)
-    }
+  // Drains any remaining queued tokens at the same adaptive pace used for
+  // normal delivery, so the tail end of a response speeds up smoothly to
+  // catch up rather than either crawling at a fixed rate or dumping the
+  // whole backlog instantly once `done` arrives.
+  function drainQueue(): Promise<void> {
+    return new Promise((resolve) => {
+      if (displayTimer) {
+        clearTimeout(displayTimer)
+        displayTimer = null
+      }
+      const step = () => {
+        if (tokenQueue.length == 0) {
+          resolve()
+          return
+        }
+        callbacks.onToken?.(tokenQueue.shift()!)
+        if (tokenQueue.length == 0) {
+          resolve()
+          return
+        }
+        displayTimer = setTimeout(step, nextInterval())
+      }
+      step()
+    })
   }
 
   let raw = ''
@@ -237,7 +268,7 @@ async function streamFromURL(
         }
 
         if (data.type == 'done') {
-          flushTokens()
+          await drainQueue()
           callbacks.onDone?.(data.assistant_message_id)
           continue
         }
@@ -259,7 +290,7 @@ async function streamFromURL(
     }
   }
 
-  flushTokens()
+  await drainQueue()
 
   return sessionId
 }

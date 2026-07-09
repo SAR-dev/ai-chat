@@ -45,6 +45,10 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     },
   })
 
+  // react-hook-form's `watch()` is inherently unmemoizable by design, so
+  // React Compiler can't safely memoize this component around it — expected,
+  // not a bug.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const currentLang = watch('language')
 
   const handleLanguageChange = (value: string | null) => {
