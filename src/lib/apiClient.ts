@@ -152,10 +152,11 @@ async function streamFromURL(
   }
 
   function pushToken(token: string) {
+    if (!token) return
     const pieces = token.match(new RegExp(`.{1,${CHARS_PER_PIECE}}`, 'gs')) ?? [token]
     tokenQueue.push(...pieces)
     if (!displayTimer) {
-      displayTimer = setTimeout(displayNext, nextInterval())
+      displayNext()
     }
   }
 

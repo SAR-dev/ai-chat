@@ -20,6 +20,7 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
   const messages = useChatStore((s) => s.messagesBySessionId[sessionId]) ?? []
   const messagesStatus = useChatStore((s) => s.messagesStatus)
   const isStreaming = useChatStore((s) => s.isStreaming)
+  const hasStreamingContent = useChatStore((s) => s.hasStreamingContent)
   const streamingContent = useChatStore((s) => {
     const msgs = s.messagesBySessionId[sessionId] ?? []
     const streamingMsg = msgs.find((m) => m.uuid == s.streamingMessageId)
@@ -91,7 +92,7 @@ export default function ChatWindow({ sessionId }: ChatWindowProps) {
               streamingContent={msg.uuid == streamingMessageId ? streamingContent : undefined}
             />
           ))}
-          {isStreaming && streamingContent == '' && <TypingIndicator />}
+          {isStreaming && streamingContent == '' && !hasStreamingContent && <TypingIndicator />}
         </div>
       </ScrollArea>
       {showJumpButton && (

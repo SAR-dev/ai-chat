@@ -21,6 +21,7 @@ interface ChatState {
   activeSessionId: string | null
   isStreaming: boolean
   streamingMessageId: string | null
+  hasStreamingContent: boolean
   sessionsStatus: 'idle' | 'loading' | 'error'
   messagesStatus: 'idle' | 'loading' | 'error'
   isEndOfHistory: boolean
@@ -105,6 +106,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   activeSessionId: null,
   isStreaming: false,
   streamingMessageId: null,
+  hasStreamingContent: false,
   sessionsStatus: 'idle',
   messagesStatus: 'idle',
   isEndOfHistory: false,
@@ -275,6 +277,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       },
       isStreaming: true,
       streamingMessageId: assistantMsg.uuid,
+      hasStreamingContent: false,
     })
 
     abortController = new AbortController()
@@ -301,6 +304,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
               )
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
+                hasStreamingContent: true,
               }
             })
           },
@@ -452,6 +456,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
                 isStreaming: false,
                 streamingMessageId: null,
+                hasStreamingContent: false,
               }
             })
             for (const { sessionId: sid, msgId, images } of imagesToStore) {
@@ -472,10 +477,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
             isStreaming: false,
             streamingMessageId: null,
+            hasStreamingContent: false,
           }
         })
       } else {
-        set({ isStreaming: false, streamingMessageId: null })
+        set({ isStreaming: false, streamingMessageId: null, hasStreamingContent: false })
       }
     }
 
@@ -504,6 +510,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       },
       isStreaming: true,
       streamingMessageId: assistantMsg.uuid,
+      hasStreamingContent: false,
     })
 
     abortController = new AbortController()
@@ -529,6 +536,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
               )
               return {
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
+                hasStreamingContent: true,
               }
             })
           },
@@ -596,6 +604,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
                 messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
                 isStreaming: false,
                 streamingMessageId: null,
+                hasStreamingContent: false,
               }
             })
             for (const { sessionId: sid, msgId, images } of imagesToStore) {
@@ -616,10 +625,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
             messagesBySessionId: { ...s.messagesBySessionId, [storageKey]: updated },
             isStreaming: false,
             streamingMessageId: null,
+            hasStreamingContent: false,
           }
         })
       } else {
-        set({ isStreaming: false, streamingMessageId: null })
+        set({ isStreaming: false, streamingMessageId: null, hasStreamingContent: false })
       }
     }
   },
