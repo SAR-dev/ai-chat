@@ -1,8 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import ArtifactRenderer from '@/components/ArtifactRenderer'
 import ImageGenLoading from '@/components/ImageGenLoading'
@@ -13,10 +19,27 @@ import SlideGenLoading from '@/components/SlideGenLoading'
 import TypingIndicator from '@/components/TypingIndicator'
 import type { MessageState } from '@/types'
 import { cn } from '@/lib/utils'
-import { Copy, Pencil, RefreshCw, ThumbsUp, ThumbsDown, Download } from 'lucide-react'
+import {
+  Copy,
+  Pencil,
+  RefreshCw,
+  ThumbsUp,
+  ThumbsDown,
+  Download,
+  FileText,
+  FileType,
+  FileCode,
+} from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
-import * as api from '@/lib/apiClient'
 import { toast } from 'sonner'
+import type { ChartSnapshot, ExportFormat } from '@/lib/exportMessage'
+import {
+  buildDocxBlob,
+  buildExportFilename,
+  buildMarkdownBlob,
+  buildPlainTextBlob,
+  downloadBlob,
+} from '@/lib/exportMessage'
 
 interface ChatMessageProps {
   message: MessageState
@@ -40,9 +63,11 @@ export default function ChatMessage({
 
   const [zoomIndex, setZoomIndex] = useState<number | null>(null)
   const [editContent, setEditContent] = useState(message.content)
+  const [isDownloading, setIsDownloading] = useState(false)
   const editAndResend = useChatStore((s) => s.editAndResend)
   const regenerateMessage = useChatStore((s) => s.regenerateMessage)
   const submitFeedback = useChatStore((s) => s.submitFeedback)
+  const chartNodeRefs = useRef<Record<number, HTMLDivElement | null>>({})
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content)
@@ -62,27 +87,46 @@ export default function ChatMessage({
     }
   }
 
-  const handleDownload = async () => {
+  const captureChartSnapshots = async (): Promise<ChartSnapshot[]> => {
+    const chartIndexes = message.artifacts
+      .map((artifact, i) => (artifact.artifact_type == 'chart' ? i : -1))
+      .filter((i) => i >= 0)
+    if (chartIndexes.length == 0) return []
+
+    const { default: html2canvas } = await import('html2canvas')
+    const snapshots: ChartSnapshot[] = []
+    for (const i of chartIndexes) {
+      const node = chartNodeRefs.current[i]
+      if (!node) continue
+      try {
+        const canvas = await html2canvas(node, { backgroundColor: '#ffffff', scale: 2 })
+        snapshots.push({ index: i, dataUrl: canvas.toDataURL('image/png') })
+      } catch {
+        // Skip charts that fail to rasterize; the underlying data table is still exported.
+      }
+    }
+    return snapshots
+  }
+
+  const handleDownload = async (format: ExportFormat) => {
+    if (isDownloading) return
+    setIsDownloading(true)
     try {
-      const blob = await api.downloadChat({
-        content: message.content,
-        format: 'docx',
-        filename: `message-${message.uuid.slice(0, 8)}.docx`,
-      })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `message-${message.uuid.slice(0, 8)}.docx`
-      a.click()
-      URL.revokeObjectURL(url)
+      const filename = buildExportFilename(message, format)
+      if (format == 'text') {
+        downloadBlob(buildPlainTextBlob(message), filename)
+        return
+      }
+      const snapshots = await captureChartSnapshots()
+      if (format == 'markdown') {
+        downloadBlob(buildMarkdownBlob(message, snapshots), filename)
+      } else {
+        downloadBlob(await buildDocxBlob(message, snapshots), filename)
+      }
     } catch {
-      const blob = new Blob([message.content], { type: 'text/markdown' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `message-${message.uuid.slice(0, 8)}.md`
-      a.click()
-      URL.revokeObjectURL(url)
+      toast.error(t('chat.downloadFailed'))
+    } finally {
+      setIsDownloading(false)
     }
   }
 
@@ -220,7 +264,18 @@ export default function ChatMessage({
             {message.artifacts.length > 0 && (
               <div className="mt-3 space-y-4">
                 {message.artifacts.map((artifact, i) => (
-                  <ArtifactRenderer key={i} artifact={artifact} />
+                  <div
+                    key={i}
+                    ref={
+                      artifact.artifact_type == 'chart'
+                        ? (el) => {
+                            chartNodeRefs.current[i] = el
+                          }
+                        : undefined
+                    }
+                  >
+                    <ArtifactRenderer artifact={artifact} />
+                  </div>
                 ))}
               </div>
             )}
@@ -307,15 +362,28 @@ export default function ChatMessage({
               </>
             )}
 
-            <Tooltip>
-              <TooltipTrigger
-                render={<Button variant="ghost" size="icon-xs" />}
-                onClick={handleDownload}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<Button variant="ghost" size="icon-xs" disabled={isDownloading} />}
+                title={t('chat.download')}
               >
-                <Download className="h-3 w-3" />
-              </TooltipTrigger>
-              <TooltipContent>{t('chat.download')}</TooltipContent>
-            </Tooltip>
+                <Download className={cn('h-3 w-3', isDownloading && 'animate-pulse')} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 p-2">
+                <DropdownMenuItem onClick={() => handleDownload('markdown')}>
+                  <FileCode className="h-4 w-4" />
+                  {t('chat.downloadMarkdown')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('docx')}>
+                  <FileType className="h-4 w-4" />
+                  {t('chat.downloadDocx')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('text')}>
+                  <FileText className="h-4 w-4" />
+                  {t('chat.downloadText')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </div>

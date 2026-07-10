@@ -91,7 +91,6 @@ export default function ChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const sendChatMessage = useChatStore((s) => s.sendChatMessage)
   const sendRagMessage = useChatStore((s) => s.sendRagMessage)
-  const stopStreaming = useChatStore((s) => s.stopStreaming)
   const isStreaming = useChatStore((s) => s.isStreaming)
   const isLoading = useChatStore((s) => s.messagesStatus == 'loading')
   const categories = useChatStore((s) => s.categories)
@@ -432,12 +431,7 @@ export default function ChatInput({
             />
 
             {isStreaming ? (
-              <Button
-                variant="secondary"
-                size="icon-sm"
-                onClick={stopStreaming}
-                className="shrink-0"
-              >
+              <Button variant="secondary" size="icon-sm" disabled className="shrink-0">
                 <CircleStop className="h-4 w-4" />
               </Button>
             ) : (

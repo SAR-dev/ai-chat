@@ -20,6 +20,7 @@ KikuChat is an AI chat application for Mass Holdings Ltd., powered by the "Kikum
 | **Markdown**         | react-markdown + remark/rehype plugins (math, diagrams, syntax highlighting, emoji) |
 | **Charts**           | Recharts                                                                            |
 | **Diagrams**         | Mermaid 11                                                                          |
+| **Document Export**  | docx (Word generation), html2canvas (chart rasterization for exports)               |
 | **Package Manager**  | pnpm                                                                                |
 | **Linting**          | ESLint 9 (flat config) + oxlint                                                     |
 | **Formatting**       | Prettier + prettier-plugin-tailwindcss                                              |
@@ -147,6 +148,7 @@ src/
 
   lib/
     apiClient.ts              # Axios client + SSE streaming + all API functions
+    exportMessage.ts          # Client-side message export: Markdown/DOCX/plain text builders, image + chart embedding, docx table/paragraph generation
     i18n.ts                   # i18next configuration (en/ja)
     imageStore.ts             # IndexedDB persistence for generated images
     slideStore.ts             # IndexedDB persistence for generated slide decks
@@ -213,8 +215,13 @@ All routes except `/login` are wrapped in `<ProtectedRoute>` which redirects to 
 - **File Upload** — drag-and-drop (react-dropzone), file previews, type/size validation (10MB max)
 - **Agent Tools** — expandable agent activity section showing RAG search, web search, company KB search with reasoning
 - **Conversation Management** — create, delete, pin/unpin (client-side IndexedDB), search (Cmd+K)
-- **Send During Streaming** — textarea stays enabled during streaming so users can compose their next message. The send button is disabled while a response is in progress; pressing send is a no-op. ChatPage shows a "Starting your chat..." overlay when creating a new chat via suggestion buttons
-- **Message Actions** — copy, edit & resend, regenerate, thumbs up/down feedback, download as DOCX/MD
+- **Send During Streaming** — textarea stays enabled during streaming so users can compose their next message. The send button is disabled while a response is in progress; pressing send is a no-op. Generation cannot be cancelled from the client (the backend keeps generating regardless of the client's connection), so the button shown during streaming is a disabled placeholder rather than a working stop control. ChatPage shows a "Starting your chat..." overlay when creating a new chat via suggestion buttons
+- **Message Actions** — copy, edit & resend, regenerate, thumbs up/down feedback, download in Markdown/DOCX/plain text (see below)
+- **Message Export** — per-message download menu (`ChatMessage.tsx` + `lib/exportMessage.ts`) generates the file entirely client-side, no backend call required:
+  - **Markdown (.md)** — original content plus embedded images (base64 data URIs), chart PNGs, data tables, and slide deck links
+  - **Word (.docx)** — built with the `docx` library; includes a lightweight markdown-to-docx parser (headings, bold/italic, code blocks, lists, blockquotes, links, tables) plus embedded images and rasterized charts
+  - **Plain text (.txt)** — markdown stripped to prose, with chart/table data rendered as tab-separated rows and slide deck links listed
+  - Charts are rasterized on demand via `html2canvas` (dynamically imported to avoid bloating the main bundle) by snapshotting the live Recharts DOM node
 - **Bilingual UI** — full English/Japanese localization with automatic language detection
 - **Responsive Design** — desktop (resizable sidebar panels) / mobile (drawer sidebar)
 
@@ -251,25 +258,27 @@ chore: update dependencies
 
 The app communicates with the backend via `src/lib/apiClient.ts`:
 
-| Method | Endpoint                              | Description                                            |
-| ------ | ------------------------------------- | ------------------------------------------------------ |
-| POST   | `/login`                              | Standard login                                         |
-| POST   | `/login/ad`                           | AD login                                               |
-| POST   | `/register`                           | Registration                                           |
-| POST   | `/chat/stream`                        | SSE streaming chat (supports file upload via FormData) |
-| POST   | `/query/stream`                       | SSE streaming RAG query                                |
-| POST   | `/chat/download`                      | Download conversation as DOCX                          |
-| GET    | `/sessions`                           | List sessions (paginated)                              |
-| GET    | `/sessions/:id`                       | Get session + messages                                 |
-| DELETE | `/sessions/:id`                       | Delete session                                         |
-| PATCH  | `/sessions/:id`                       | Pin session                                            |
-| POST   | `/sessions/:id/messages/truncate`     | Truncate messages                                      |
-| POST   | `/messages/:id/feedback`              | Submit thumbs up/down feedback                         |
-| POST   | `/slides/:deckId/:slideId/regenerate` | Regenerate a single slide                              |
-| GET    | `/user/settings`                      | Get user settings                                      |
-| PATCH  | `/user/settings`                      | Update user settings                                   |
-| GET    | `/categories`                         | List RAG categories                                    |
-| POST   | `/request/cancel/:requestId`          | Cancel active request                                  |
-| GET    | `/request/active`                     | List active requests                                   |
+| Method | Endpoint                              | Description                                                   |
+| ------ | ------------------------------------- | ------------------------------------------------------------- |
+| POST   | `/login`                              | Standard login                                                |
+| POST   | `/login/ad`                           | AD login                                                      |
+| POST   | `/register`                           | Registration                                                  |
+| POST   | `/chat/stream`                        | SSE streaming chat (supports file upload via FormData)        |
+| POST   | `/query/stream`                       | SSE streaming RAG query                                       |
+| POST   | `/chat/download`                      | Download conversation as DOCX (unused by UI — see note below) |
+| GET    | `/sessions`                           | List sessions (paginated)                                     |
+| GET    | `/sessions/:id`                       | Get session + messages                                        |
+| DELETE | `/sessions/:id`                       | Delete session                                                |
+| PATCH  | `/sessions/:id`                       | Pin session                                                   |
+| POST   | `/sessions/:id/messages/truncate`     | Truncate messages                                             |
+| POST   | `/messages/:id/feedback`              | Submit thumbs up/down feedback                                |
+| POST   | `/slides/:deckId/:slideId/regenerate` | Regenerate a single slide                                     |
+| GET    | `/user/settings`                      | Get user settings                                             |
+| PATCH  | `/user/settings`                      | Update user settings                                          |
+| GET    | `/categories`                         | List RAG categories                                           |
+| POST   | `/request/cancel/:requestId`          | Cancel active request (unused by UI — see note below)         |
+| GET    | `/request/active`                     | List active requests                                          |
 
 Streaming endpoints use Server-Sent Events (SSE) with `event:` and `data:` lines. Event types: `start`, `title_updated`, `agent_tools`, `artifact`, `image`, `image_status`, `slide`, `slide_status`, `sources`, `done`.
+
+> **Note:** `/chat/download` and `/request/cancel/:requestId` are defined in `apiClient.ts` for backend API completeness but are not currently called by the UI. Message downloads are generated entirely client-side (see **Message Export** above), and there is no way to cancel an in-progress generation — aborting the client's SSE connection does not stop the backend from continuing to generate, so `stopStreaming()` in `chatStore.ts` is unused by the UI as well.
