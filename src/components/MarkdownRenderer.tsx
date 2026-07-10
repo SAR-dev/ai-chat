@@ -12,6 +12,7 @@ import mermaid from 'mermaid'
 import { cn } from '@/lib/utils'
 import type { SourceLink } from '@/types'
 import { renderContentPipeline } from '@/utils/sourceLinks'
+import { MAX_IMAGE_DISPLAY_HEIGHT_PX } from '@/lib/media/imageSizing'
 
 mermaid.initialize({
   startOnLoad: false,
@@ -364,6 +365,24 @@ const components: Components = {
           </code>
         </pre>
       </div>
+    )
+  },
+  img({ src, alt, ...props }) {
+    return (
+      <img
+        src={typeof src == 'string' ? src : undefined}
+        alt={alt ?? ''}
+        loading="lazy"
+        className="my-3 rounded-lg first:mt-0 last:mb-0"
+        style={{
+          maxWidth: '100%',
+          maxHeight: MAX_IMAGE_DISPLAY_HEIGHT_PX,
+          width: 'auto',
+          height: 'auto',
+          objectFit: 'contain',
+        }}
+        {...props}
+      />
     )
   },
   a({ href, children, ...props }) {

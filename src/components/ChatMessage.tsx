@@ -19,27 +19,11 @@ import SlideGenLoading from '@/components/SlideGenLoading'
 import TypingIndicator from '@/components/TypingIndicator'
 import type { MessageState } from '@/types'
 import { cn } from '@/lib/utils'
-import {
-  Copy,
-  Pencil,
-  RefreshCw,
-  ThumbsUp,
-  ThumbsDown,
-  Download,
-  FileText,
-  FileType,
-  FileCode,
-} from 'lucide-react'
+import { Copy, Pencil, RefreshCw, ThumbsUp, ThumbsDown, Download, FileType } from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
 import { toast } from 'sonner'
-import type { ChartSnapshot, ExportFormat } from '@/lib/exportMessage'
-import {
-  buildDocxBlob,
-  buildExportFilename,
-  buildMarkdownBlob,
-  buildPlainTextBlob,
-  downloadBlob,
-} from '@/lib/exportMessage'
+import { buildDocxBlob, buildExportFilename, captureChartSnapshots, downloadBlob } from '@/lib/export'
+import { MAX_IMAGE_DISPLAY_HEIGHT_PX } from '@/lib/media/imageSizing'
 
 interface ChatMessageProps {
   message: MessageState
@@ -87,42 +71,13 @@ export default function ChatMessage({
     }
   }
 
-  const captureChartSnapshots = async (): Promise<ChartSnapshot[]> => {
-    const chartIndexes = message.artifacts
-      .map((artifact, i) => (artifact.artifact_type == 'chart' ? i : -1))
-      .filter((i) => i >= 0)
-    if (chartIndexes.length == 0) return []
-
-    const { default: html2canvas } = await import('html2canvas')
-    const snapshots: ChartSnapshot[] = []
-    for (const i of chartIndexes) {
-      const node = chartNodeRefs.current[i]
-      if (!node) continue
-      try {
-        const canvas = await html2canvas(node, { backgroundColor: '#ffffff', scale: 2 })
-        snapshots.push({ index: i, dataUrl: canvas.toDataURL('image/png') })
-      } catch {
-        // Skip charts that fail to rasterize; the underlying data table is still exported.
-      }
-    }
-    return snapshots
-  }
-
-  const handleDownload = async (format: ExportFormat) => {
+  const handleDownload = async () => {
     if (isDownloading) return
     setIsDownloading(true)
     try {
-      const filename = buildExportFilename(message, format)
-      if (format == 'text') {
-        downloadBlob(buildPlainTextBlob(message), filename)
-        return
-      }
-      const snapshots = await captureChartSnapshots()
-      if (format == 'markdown') {
-        downloadBlob(buildMarkdownBlob(message, snapshots), filename)
-      } else {
-        downloadBlob(await buildDocxBlob(message, snapshots), filename)
-      }
+      const filename = buildExportFilename(message)
+      const snapshots = await captureChartSnapshots(message, chartNodeRefs.current)
+      downloadBlob(await buildDocxBlob(message, snapshots), filename)
     } catch {
       toast.error(t('chat.downloadFailed'))
     } finally {
@@ -187,7 +142,13 @@ export default function ChatMessage({
                 <img
                   src={img.b64}
                   alt={img.caption ?? ''}
-                  className="max-h-48 rounded-xl object-contain shadow-sm"
+                  className="rounded-xl object-contain shadow-sm"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: MAX_IMAGE_DISPLAY_HEIGHT_PX,
+                    width: 'auto',
+                    height: 'auto',
+                  }}
                 />
               </button>
             ))}
@@ -370,17 +331,9 @@ export default function ChatMessage({
                 <Download className={cn('h-3 w-3', isDownloading && 'animate-pulse')} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 p-2">
-                <DropdownMenuItem onClick={() => handleDownload('markdown')}>
-                  <FileCode className="h-4 w-4" />
-                  {t('chat.downloadMarkdown')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownload('docx')}>
+                <DropdownMenuItem onClick={handleDownload}>
                   <FileType className="h-4 w-4" />
                   {t('chat.downloadDocx')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownload('text')}>
-                  <FileText className="h-4 w-4" />
-                  {t('chat.downloadText')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
