@@ -101,7 +101,7 @@ src/
 
   components/
     AppLayout.tsx             # Root layout (sidebar + resizable panels)
-    ArtifactRenderer.tsx      # Charts, KPI cards, tables (Recharts)
+    ArtifactRenderer.tsx      # Charts, KPI cards, tables (Recharts, adaptive dark/light theming, dynamic color palette)
     BrandMark.tsx             # Logo image component
     ChatHeader.tsx            # Conversation header
     ChatInput.tsx             # Message input (textarea, file upload, mode dropdown)
@@ -129,7 +129,8 @@ src/
     types.ts                  # Local component type aliases
 
     ui/                       # shadcn/ui primitive components
-      alert-dialog.tsx        # badge.tsx, badge-variants.ts
+      alert-dialog.tsx        # Dialog with size variants (sm, default, lg, xl, full)
+      badge.tsx, badge-variants.ts
       button.tsx              # button.tsx, button-variants.ts
       card.tsx, command.tsx, dialog.tsx, dropdown-menu.tsx
       input.tsx, input-group.tsx, label.tsx, popover.tsx
@@ -206,7 +207,7 @@ All routes except `/login` are wrapped in `<ProtectedRoute>` which redirects to 
 
 - **AI Chat with SSE Streaming** — real-time streaming with adaptive token pacing (framer-motion text reveal). TypingIndicator rendered inside the assistant message bubble for seamless transition from "Thinking..." to response content.
 - **Rich Markdown Rendering** — GFM, math (KaTeX `$...$` / `$$...$$`), diagrams (Mermaid, PlantUML), code highlighting (highlight.js), auto-linked headings, tables, emoji, inline HTML
-- **Data Artifacts** — charts (line, bar, pie, area, scatter, forecast, heatmap via Recharts), KPI cards, data tables
+- **Data Artifacts** — charts (line, bar, pie, area, scatter, forecast, heatmap via Recharts) with dark/light adaptive theming and hash-based dynamic color palette; KPI cards, data tables
 - **Image Generation** — shimmer loading skeleton, zoom modal (keyboard-navigable gallery), download, IndexedDB persistence
 - **Slide Deck Generation** — 9-stage pipeline stepper, iframe preview, fullscreen mode, individual slide regeneration, PPTX download, IndexedDB persistence
 - **File Upload** — drag-and-drop (react-dropzone), file previews, type/size validation (10MB max)

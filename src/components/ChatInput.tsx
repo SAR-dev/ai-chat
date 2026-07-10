@@ -334,7 +334,11 @@ export default function ChatInput({
                     })}
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuRadioGroup value={slideStyle} onValueChange={setSlideStyle} className="pb-1">
+                  <DropdownMenuRadioGroup
+                    value={slideStyle}
+                    onValueChange={setSlideStyle}
+                    className="pb-1"
+                  >
                     <DropdownMenuLabel>Slide</DropdownMenuLabel>
                     {SLIDE_STYLES.map((option) => {
                       const Icon = option.icon
